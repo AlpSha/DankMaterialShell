@@ -312,12 +312,13 @@ EOF
     fi
   fi
 
-  TERM_SEQ_DIR="$STATE_DIR/generated/terminal"
+  TERM_SEQ_DIR="$HOME/.local/state/quickshell/user/generated/terminal"
   TERM_SEQ_FILE="$TERM_SEQ_DIR/sequences.txt"
+  TERM_TEMPLATE="$SHELL_DIR/matugen/templates/terminal-sequences.txt"
   mkdir -p "$TERM_SEQ_DIR"
 
   PALETTE_OUT=$("$SHELL_DIR/matugen/dank16.py" "$PRIMARY" $([[ "$mode" == "light" ]] && echo --light) ${HONOR:+--honor-primary "$HONOR"} ${SURFACE:+--background "$SURFACE"} 2>/dev/null || true)
-  if [[ -n "${PALETTE_OUT:-}" ]]; then
+  if [[ -n "${PALETTE_OUT:-}" ]] && [[ -f "$TERM_TEMPLATE" ]]; then
     COLORS=()
     while read -r line; do
       color=$(echo "$line" | awk -F'=' '{print $NF}')
@@ -325,22 +326,18 @@ EOF
     done <<< "$PALETTE_OUT"
 
     if [[ ${#COLORS[@]} -eq 16 ]]; then
-      {
-        for i in {0..15}; do
-          printf ']4;%d;%s\\' "$i" "${COLORS[$i]}"
-        done
-        printf ']1;0;%s\\' "${COLORS[0]}"
-        printf ']10;%s\\' "${COLORS[7]}"
-        printf ']11;[100]%s\\' "${COLORS[0]}"
-        printf ']12;%s\\' "${COLORS[7]}"
-        printf ']13;%s\\' "${COLORS[7]}"
-        printf ']17;%s\\' "${COLORS[7]}"
-        printf ']19;%s\\' "${COLORS[0]}"
-        printf ']4;232;%s\\' "${COLORS[7]}"
-        printf ']4;256;%s\\' "${COLORS[7]}"
-        printf ']708;[100]%s\\' "${COLORS[0]}"
-        printf ']11;%s\\' "${COLORS[0]}"
-      } > "$TERM_SEQ_FILE"
+      cp "$TERM_TEMPLATE" "$TERM_SEQ_FILE"
+      for i in {15..0}; do
+        sed -i "s/\$term$i #/${COLORS[$i]#\#}/g" "$TERM_SEQ_FILE"
+      done
+
+      for file in /dev/pts/*; do
+        if [[ $file =~ ^/dev/pts/[0-9]+$ ]]; then
+          {
+            cat "$TERM_SEQ_FILE" > "$file"
+          } & disown || true
+        fi
+      done
     fi
   fi
 

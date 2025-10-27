@@ -74,24 +74,24 @@ def generate_palette(base_color, is_light=False, honor_primary=None, background=
     else:
         bg_color = "#1a1a1a"
         palette.append(bg_color)
-    
-    red_h = 0.0
+
+    red_h = 0.0 + (h * 0.05)
     if is_light:
         red_color = rgb_to_hex(*colorsys.hsv_to_rgb(red_h, 0.75, 0.85))
         palette.append(ensure_contrast(red_color, bg_color, 4.5, is_light))
     else:
         red_color = rgb_to_hex(*colorsys.hsv_to_rgb(red_h, 0.6, 0.8))
         palette.append(ensure_contrast(red_color, bg_color, 4.5, is_light))
-    
-    green_h = 0.33
+
+    green_h = 0.33 + (h * 0.08)
     if is_light:
         green_color = rgb_to_hex(*colorsys.hsv_to_rgb(green_h, max(s * 0.9, 0.75), v * 0.6))
         palette.append(ensure_contrast(green_color, bg_color, 4.5, is_light))
     else:
         green_color = rgb_to_hex(*colorsys.hsv_to_rgb(green_h, max(s * 0.65, 0.5), v * 0.9))
         palette.append(ensure_contrast(green_color, bg_color, 4.5, is_light))
-    
-    yellow_h = 0.08
+
+    yellow_h = 0.15 - (h * 0.05)
     if is_light:
         yellow_color = rgb_to_hex(*colorsys.hsv_to_rgb(yellow_h, max(s * 0.85, 0.7), v * 0.7))
         palette.append(ensure_contrast(yellow_color, bg_color, 4.5, is_light))
