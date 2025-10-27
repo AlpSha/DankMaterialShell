@@ -62,9 +62,9 @@ def ensure_contrast(hex_color, hex_bg, min_ratio=4.5, is_light_mode=False):
 def generate_palette(base_color, is_light=False, honor_primary=None, background=None):
     r, g, b = hex_to_rgb(base_color)
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
-    
+
     palette = []
-    
+
     if background:
         bg_color = background
         palette.append(bg_color)
@@ -75,28 +75,28 @@ def generate_palette(base_color, is_light=False, honor_primary=None, background=
         bg_color = "#1a1a1a"
         palette.append(bg_color)
 
-    red_h = 0.0 + (h * 0.05)
+    red_h = (h - 0.15) % 1.0
     if is_light:
-        red_color = rgb_to_hex(*colorsys.hsv_to_rgb(red_h, 0.75, 0.85))
+        red_color = rgb_to_hex(*colorsys.hsv_to_rgb(red_h, max(s * 0.8, 0.65), v * 0.7))
         palette.append(ensure_contrast(red_color, bg_color, 4.5, is_light))
     else:
-        red_color = rgb_to_hex(*colorsys.hsv_to_rgb(red_h, 0.6, 0.8))
+        red_color = rgb_to_hex(*colorsys.hsv_to_rgb(red_h, max(s * 0.7, 0.55), min(v * 1.2, 0.85)))
         palette.append(ensure_contrast(red_color, bg_color, 4.5, is_light))
 
-    green_h = 0.33 + (h * 0.08)
+    green_h = (h + 0.12) % 1.0
     if is_light:
-        green_color = rgb_to_hex(*colorsys.hsv_to_rgb(green_h, max(s * 0.9, 0.75), v * 0.6))
+        green_color = rgb_to_hex(*colorsys.hsv_to_rgb(green_h, max(s * 0.85, 0.7), v * 0.65))
         palette.append(ensure_contrast(green_color, bg_color, 4.5, is_light))
     else:
-        green_color = rgb_to_hex(*colorsys.hsv_to_rgb(green_h, max(s * 0.65, 0.5), v * 0.9))
+        green_color = rgb_to_hex(*colorsys.hsv_to_rgb(green_h, max(s * 0.75, 0.6), min(v * 1.3, 0.9)))
         palette.append(ensure_contrast(green_color, bg_color, 4.5, is_light))
 
-    yellow_h = 0.15 - (h * 0.05)
+    yellow_h = (h - 0.08) % 1.0
     if is_light:
-        yellow_color = rgb_to_hex(*colorsys.hsv_to_rgb(yellow_h, max(s * 0.85, 0.7), v * 0.7))
+        yellow_color = rgb_to_hex(*colorsys.hsv_to_rgb(yellow_h, max(s * 0.8, 0.65), v * 0.75))
         palette.append(ensure_contrast(yellow_color, bg_color, 4.5, is_light))
     else:
-        yellow_color = rgb_to_hex(*colorsys.hsv_to_rgb(yellow_h, max(s * 0.5, 0.45), v * 1.4))
+        yellow_color = rgb_to_hex(*colorsys.hsv_to_rgb(yellow_h, max(s * 0.65, 0.5), min(v * 1.4, 0.9)))
         palette.append(ensure_contrast(yellow_color, bg_color, 4.5, is_light))
     
     if is_light:
