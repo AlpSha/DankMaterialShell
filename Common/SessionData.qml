@@ -1,4 +1,5 @@
 pragma Singleton
+
 pragma ComponentBehavior: Bound
 
 import QtCore
@@ -20,6 +21,7 @@ Singleton {
 
     property bool isLightMode: false
     property bool doNotDisturb: false
+    property bool isSwitchingMode: false
 
     property string wallpaperPath: ""
     property bool perMonitorWallpaper: false
@@ -41,6 +43,7 @@ Singleton {
 
     property bool nightModeEnabled: false
     property int nightModeTemperature: 4500
+    property int nightModeHighTemperature: 6500
     property bool nightModeAutoEnabled: false
     property string nightModeAutoMode: "time"
     property int nightModeStartHour: 18
@@ -57,6 +60,8 @@ Singleton {
     property bool showThirdPartyPlugins: false
     property string launchPrefix: ""
     property string lastBrightnessDevice: ""
+    property var brightnessExponentialDevices: ({})
+    property var brightnessUserSetValues: ({})
 
     property int selectedGpuIndex: 0
     property bool nvidiaGpuTempEnabled: false
@@ -82,7 +87,21 @@ Singleton {
             if (content && content.trim()) {
                 var settings = JSON.parse(content)
                 isLightMode = settings.isLightMode !== undefined ? settings.isLightMode : false
-                wallpaperPath = settings.wallpaperPath !== undefined ? settings.wallpaperPath : ""
+
+                if (settings.wallpaperPath && settings.wallpaperPath.startsWith("we:")) {
+                    console.warn("WallpaperEngine wallpaper detected, resetting wallpaper")
+                    wallpaperPath = ""
+                    Quickshell.execDetached([
+                        "notify-send",
+                        "-u", "critical",
+                        "-a", "DMS",
+                        "-i", "dialog-warning",
+                        "WallpaperEngine Support Moved",
+                        "WallpaperEngine support has been moved to a plugin. Please enable the Linux Wallpaper Engine plugin in Settings → Plugins to continue using WallpaperEngine."
+                    ])
+                } else {
+                    wallpaperPath = settings.wallpaperPath !== undefined ? settings.wallpaperPath : ""
+                }
                 perMonitorWallpaper = settings.perMonitorWallpaper !== undefined ? settings.perMonitorWallpaper : false
                 monitorWallpapers = settings.monitorWallpapers !== undefined ? settings.monitorWallpapers : {}
                 perModeWallpaper = settings.perModeWallpaper !== undefined ? settings.perModeWallpaper : false
@@ -90,9 +109,12 @@ Singleton {
                 wallpaperPathDark = settings.wallpaperPathDark !== undefined ? settings.wallpaperPathDark : ""
                 monitorWallpapersLight = settings.monitorWallpapersLight !== undefined ? settings.monitorWallpapersLight : {}
                 monitorWallpapersDark = settings.monitorWallpapersDark !== undefined ? settings.monitorWallpapersDark : {}
+                brightnessExponentialDevices = settings.brightnessExponentialDevices !== undefined ? settings.brightnessExponentialDevices : (settings.brightnessLogarithmicDevices || {})
+                brightnessUserSetValues = settings.brightnessUserSetValues !== undefined ? settings.brightnessUserSetValues : {}
                 doNotDisturb = settings.doNotDisturb !== undefined ? settings.doNotDisturb : false
                 nightModeEnabled = settings.nightModeEnabled !== undefined ? settings.nightModeEnabled : false
                 nightModeTemperature = settings.nightModeTemperature !== undefined ? settings.nightModeTemperature : 4500
+                nightModeHighTemperature = settings.nightModeHighTemperature !== undefined ? settings.nightModeHighTemperature : 6500
                 nightModeAutoEnabled = settings.nightModeAutoEnabled !== undefined ? settings.nightModeAutoEnabled : false
                 nightModeAutoMode = settings.nightModeAutoMode !== undefined ? settings.nightModeAutoMode : "time"
                 if (settings.nightModeStartTime !== undefined) {
@@ -144,6 +166,10 @@ Singleton {
                         Theme.generateSystemThemesFromCurrentTheme()
                     }
                 }
+
+                if (typeof WallpaperCyclingService !== "undefined") {
+                    WallpaperCyclingService.updateCyclingState()
+                }
             }
         } catch (e) {
 
@@ -151,7 +177,8 @@ Singleton {
     }
 
     function saveSettings() {
-        if (isGreeterMode) return
+        if (isGreeterMode)
+            return
         settingsFile.setText(JSON.stringify({
                                                 "isLightMode": isLightMode,
                                                 "wallpaperPath": wallpaperPath,
@@ -162,9 +189,12 @@ Singleton {
                                                 "wallpaperPathDark": wallpaperPathDark,
                                                 "monitorWallpapersLight": monitorWallpapersLight,
                                                 "monitorWallpapersDark": monitorWallpapersDark,
+                                                "brightnessExponentialDevices": brightnessExponentialDevices,
+                                                "brightnessUserSetValues": brightnessUserSetValues,
                                                 "doNotDisturb": doNotDisturb,
                                                 "nightModeEnabled": nightModeEnabled,
                                                 "nightModeTemperature": nightModeTemperature,
+                                                "nightModeHighTemperature": nightModeHighTemperature,
                                                 "nightModeAutoEnabled": nightModeAutoEnabled,
                                                 "nightModeAutoMode": nightModeAutoMode,
                                                 "nightModeStartHour": nightModeStartHour,
@@ -199,37 +229,37 @@ Singleton {
         console.info("SessionData: Migrating configuration from undefined to version 1")
         if (typeof SettingsData !== "undefined") {
             if (settings.acMonitorTimeout !== undefined) {
-                SettingsData.setAcMonitorTimeout(settings.acMonitorTimeout)
+                SettingsData.set("acMonitorTimeout", settings.acMonitorTimeout)
             }
             if (settings.acLockTimeout !== undefined) {
-                SettingsData.setAcLockTimeout(settings.acLockTimeout)
+                SettingsData.set("acLockTimeout", settings.acLockTimeout)
             }
             if (settings.acSuspendTimeout !== undefined) {
-                SettingsData.setAcSuspendTimeout(settings.acSuspendTimeout)
+                SettingsData.set("acSuspendTimeout", settings.acSuspendTimeout)
             }
             if (settings.acHibernateTimeout !== undefined) {
-                SettingsData.setAcHibernateTimeout(settings.acHibernateTimeout)
+                SettingsData.set("acHibernateTimeout", settings.acHibernateTimeout)
             }
             if (settings.batteryMonitorTimeout !== undefined) {
-                SettingsData.setBatteryMonitorTimeout(settings.batteryMonitorTimeout)
+                SettingsData.set("batteryMonitorTimeout", settings.batteryMonitorTimeout)
             }
             if (settings.batteryLockTimeout !== undefined) {
-                SettingsData.setBatteryLockTimeout(settings.batteryLockTimeout)
+                SettingsData.set("batteryLockTimeout", settings.batteryLockTimeout)
             }
             if (settings.batterySuspendTimeout !== undefined) {
-                SettingsData.setBatterySuspendTimeout(settings.batterySuspendTimeout)
+                SettingsData.set("batterySuspendTimeout", settings.batterySuspendTimeout)
             }
             if (settings.batteryHibernateTimeout !== undefined) {
-                SettingsData.setBatteryHibernateTimeout(settings.batteryHibernateTimeout)
+                SettingsData.set("batteryHibernateTimeout", settings.batteryHibernateTimeout)
             }
             if (settings.lockBeforeSuspend !== undefined) {
-                SettingsData.setLockBeforeSuspend(settings.lockBeforeSuspend)
+                SettingsData.set("lockBeforeSuspend", settings.lockBeforeSuspend)
             }
             if (settings.loginctlLockIntegration !== undefined) {
-                SettingsData.setLoginctlLockIntegration(settings.loginctlLockIntegration)
+                SettingsData.set("loginctlLockIntegration", settings.loginctlLockIntegration)
             }
             if (settings.launchPrefix !== undefined) {
-                SettingsData.setLaunchPrefix(settings.launchPrefix)
+                SettingsData.set("launchPrefix", settings.launchPrefix)
             }
         }
         if (typeof CacheData !== "undefined") {
@@ -244,23 +274,12 @@ Singleton {
     }
 
     function cleanupUnusedKeys() {
-        const validKeys = [
-            "isLightMode", "wallpaperPath", "perMonitorWallpaper", "monitorWallpapers", "perModeWallpaper",
-            "wallpaperPathLight", "wallpaperPathDark", "monitorWallpapersLight",
-            "monitorWallpapersDark", "doNotDisturb", "nightModeEnabled",
-            "nightModeTemperature", "nightModeAutoEnabled", "nightModeAutoMode",
-            "nightModeStartHour", "nightModeStartMinute", "nightModeEndHour",
-            "nightModeEndMinute", "latitude", "longitude", "nightModeUseIPLocation", "nightModeLocationProvider",
-            "pinnedApps", "selectedGpuIndex", "nvidiaGpuTempEnabled",
-            "nonNvidiaGpuTempEnabled", "enabledGpuPciIds", "wallpaperCyclingEnabled",
-            "wallpaperCyclingMode", "wallpaperCyclingInterval", "wallpaperCyclingTime",
-            "monitorCyclingSettings", "lastBrightnessDevice", "launchPrefix", "wallpaperTransition",
-            "includedTransitions", "recentColors", "showThirdPartyPlugins", "configVersion"
-        ]
+        const validKeys = ["isLightMode", "wallpaperPath", "perMonitorWallpaper", "monitorWallpapers", "perModeWallpaper", "wallpaperPathLight", "wallpaperPathDark", "monitorWallpapersLight", "monitorWallpapersDark", "doNotDisturb", "nightModeEnabled", "nightModeTemperature", "nightModeHighTemperature", "nightModeAutoEnabled", "nightModeAutoMode", "nightModeStartHour", "nightModeStartMinute", "nightModeEndHour", "nightModeEndMinute", "latitude", "longitude", "nightModeUseIPLocation", "nightModeLocationProvider", "pinnedApps", "selectedGpuIndex", "nvidiaGpuTempEnabled", "nonNvidiaGpuTempEnabled", "enabledGpuPciIds", "wallpaperCyclingEnabled", "wallpaperCyclingMode", "wallpaperCyclingInterval", "wallpaperCyclingTime", "monitorCyclingSettings", "lastBrightnessDevice", "brightnessExponentialDevices", "brightnessUserSetValues", "launchPrefix", "wallpaperTransition", "includedTransitions", "recentColors", "showThirdPartyPlugins", "configVersion"]
 
         try {
             const content = settingsFile.text()
-            if (!content || !content.trim()) return
+            if (!content || !content.trim())
+                return
 
             const settings = JSON.parse(content)
             let needsSave = false
@@ -282,9 +301,11 @@ Singleton {
     }
 
     function setLightMode(lightMode) {
+        isSwitchingMode = true
         isLightMode = lightMode
         syncWallpaperForCurrentMode()
         saveSettings()
+        Qt.callLater(() => { isSwitchingMode = false })
     }
 
     function setDoNotDisturb(enabled) {
@@ -425,10 +446,13 @@ Singleton {
 
         saveSettings()
 
-        if (typeof Theme !== "undefined" && typeof Quickshell !== "undefined") {
+        if (typeof Theme !== "undefined" && typeof Quickshell !== "undefined" && typeof SettingsData !== "undefined") {
             var screens = Quickshell.screens
-            if (screens.length > 0 && screenName === screens[0].name) {
-                Theme.generateSystemThemesFromCurrentTheme()
+            if (screens.length > 0) {
+                var targetMonitor = (SettingsData.matugenTargetMonitor && SettingsData.matugenTargetMonitor !== "") ? SettingsData.matugenTargetMonitor : screens[0].name
+                if (screenName === targetMonitor) {
+                    Theme.generateSystemThemesFromCurrentTheme()
+                }
             }
         }
     }
@@ -461,7 +485,12 @@ Singleton {
     function setMonitorCyclingEnabled(screenName, enabled) {
         var newSettings = Object.assign({}, monitorCyclingSettings)
         if (!newSettings[screenName]) {
-            newSettings[screenName] = { enabled: false, mode: "interval", interval: 300, time: "06:00" }
+            newSettings[screenName] = {
+                "enabled": false,
+                "mode": "interval",
+                "interval": 300,
+                "time": "06:00"
+            }
         }
         newSettings[screenName].enabled = enabled
         monitorCyclingSettings = newSettings
@@ -471,7 +500,12 @@ Singleton {
     function setMonitorCyclingMode(screenName, mode) {
         var newSettings = Object.assign({}, monitorCyclingSettings)
         if (!newSettings[screenName]) {
-            newSettings[screenName] = { enabled: false, mode: "interval", interval: 300, time: "06:00" }
+            newSettings[screenName] = {
+                "enabled": false,
+                "mode": "interval",
+                "interval": 300,
+                "time": "06:00"
+            }
         }
         newSettings[screenName].mode = mode
         monitorCyclingSettings = newSettings
@@ -481,7 +515,12 @@ Singleton {
     function setMonitorCyclingInterval(screenName, interval) {
         var newSettings = Object.assign({}, monitorCyclingSettings)
         if (!newSettings[screenName]) {
-            newSettings[screenName] = { enabled: false, mode: "interval", interval: 300, time: "06:00" }
+            newSettings[screenName] = {
+                "enabled": false,
+                "mode": "interval",
+                "interval": 300,
+                "time": "06:00"
+            }
         }
         newSettings[screenName].interval = interval
         monitorCyclingSettings = newSettings
@@ -491,7 +530,12 @@ Singleton {
     function setMonitorCyclingTime(screenName, time) {
         var newSettings = Object.assign({}, monitorCyclingSettings)
         if (!newSettings[screenName]) {
-            newSettings[screenName] = { enabled: false, mode: "interval", interval: 300, time: "06:00" }
+            newSettings[screenName] = {
+                "enabled": false,
+                "mode": "interval",
+                "interval": 300,
+                "time": "06:00"
+            }
         }
         newSettings[screenName].time = time
         monitorCyclingSettings = newSettings
@@ -505,6 +549,11 @@ Singleton {
 
     function setNightModeTemperature(temperature) {
         nightModeTemperature = temperature
+        saveSettings()
+    }
+
+    function setNightModeHighTemperature(temperature) {
+        nightModeHighTemperature = temperature
         saveSettings()
     }
 
@@ -592,7 +641,8 @@ Singleton {
         let recent = recentColors.slice()
         recent = recent.filter(c => c !== colorStr)
         recent.unshift(colorStr)
-        if (recent.length > 5) recent = recent.slice(0, 5)
+        if (recent.length > 5)
+            recent = recent.slice(0, 5)
         recentColors = recent
         saveSettings()
     }
@@ -610,6 +660,36 @@ Singleton {
     function setLastBrightnessDevice(device) {
         lastBrightnessDevice = device
         saveSettings()
+    }
+
+    function setBrightnessExponential(deviceName, enabled) {
+        var newSettings = Object.assign({}, brightnessExponentialDevices)
+        if (enabled) {
+            newSettings[deviceName] = true
+        } else {
+            delete newSettings[deviceName]
+        }
+        brightnessExponentialDevices = newSettings
+        saveSettings()
+
+        if (typeof DisplayService !== "undefined") {
+            DisplayService.updateDeviceBrightnessDisplay(deviceName)
+        }
+    }
+
+    function getBrightnessExponential(deviceName) {
+        return brightnessExponentialDevices[deviceName] === true
+    }
+
+    function setBrightnessUserSetValue(deviceName, value) {
+        var newValues = Object.assign({}, brightnessUserSetValues)
+        newValues[deviceName] = value
+        brightnessUserSetValues = newValues
+        saveSettings()
+    }
+
+    function getBrightnessUserSetValue(deviceName) {
+        return brightnessUserSetValues[deviceName]
     }
 
     function setSelectedGpuIndex(index) {
@@ -633,7 +713,8 @@ Singleton {
     }
 
     function syncWallpaperForCurrentMode() {
-        if (!perModeWallpaper) return
+        if (!perModeWallpaper)
+            return
 
         if (perMonitorWallpaper) {
             monitorWallpapers = isLightMode ? Object.assign({}, monitorWallpapersLight) : Object.assign({}, monitorWallpapersDark)
@@ -652,10 +733,10 @@ Singleton {
 
     function getMonitorCyclingSettings(screenName) {
         return monitorCyclingSettings[screenName] || {
-            enabled: false,
-            mode: "interval",
-            interval: 300,
-            time: "06:00"
+            "enabled": false,
+            "mode": "interval",
+            "interval": 300,
+            "time": "06:00"
         }
     }
 

@@ -13,6 +13,8 @@ Rectangle {
     property var selectedDateEvents: []
     property bool hasEvents: selectedDateEvents && selectedDateEvents.length > 0
 
+    signal closeDash()
+
     function weekStartJs() {
         return Qt.locale().firstDayOfWeek % 7
     }
@@ -84,7 +86,7 @@ Rectangle {
     }
 
     radius: Theme.cornerRadius
-    color: Theme.surfaceContainerHigh
+    color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
     border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.05)
     border.width: 1
 
@@ -352,7 +354,7 @@ Rectangle {
                     } else if (eventMouseArea.containsMouse) {
                         return Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.06)
                     }
-                    return Theme.surfaceContainerHigh
+                    return Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 }
                 border.color: {
                     if (modelData.url && eventMouseArea.containsMouse) {
@@ -428,22 +430,10 @@ Rectangle {
                         if (modelData.url && modelData.url !== "") {
                             if (Qt.openUrlExternally(modelData.url) === false) {
                                 console.warn("Failed to open URL: " + modelData.url)
+                            } else {
+                                root.closeDash()
                             }
                         }
-                    }
-                }
-
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Theme.shortDuration
-                        easing.type: Theme.standardEasing
-                    }
-                }
-
-                Behavior on border.color {
-                    ColorAnimation {
-                        duration: Theme.shortDuration
-                        easing.type: Theme.standardEasing
                     }
                 }
             }

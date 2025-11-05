@@ -84,7 +84,7 @@ Item {
                 width: parent.width
                 height: wallpaperSection.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
 
@@ -130,31 +130,9 @@ Item {
                             CachingImage {
                                 anchors.fill: parent
                                 anchors.margins: 1
-                                property var weExtensions: [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tga"]
-                                property int weExtIndex: 0
                                 source: {
                                     var currentWallpaper = SessionData.perMonitorWallpaper ? SessionData.getMonitorWallpaper(selectedMonitorName) : SessionData.wallpaperPath
-                                    if (currentWallpaper && currentWallpaper.startsWith("we:")) {
-                                        var sceneId = currentWallpaper.substring(3)
-                                        return StandardPaths.writableLocation(StandardPaths.HomeLocation)
-                                            + "/.local/share/Steam/steamapps/workshop/content/431960/"
-                                            + sceneId + "/preview" + weExtensions[weExtIndex]
-                                    }
                                     return (currentWallpaper !== "" && !currentWallpaper.startsWith("#")) ? "file://" + currentWallpaper : ""
-                                }
-                                onStatusChanged: {
-                                    var currentWallpaper = SessionData.perMonitorWallpaper ? SessionData.getMonitorWallpaper(selectedMonitorName) : SessionData.wallpaperPath
-                                    if (currentWallpaper && currentWallpaper.startsWith("we:") && status === Image.Error) {
-                                        if (weExtIndex < weExtensions.length - 1) {
-                                            weExtIndex++
-                                            source = StandardPaths.writableLocation(StandardPaths.HomeLocation)
-                                                + "/.local/share/Steam/steamapps/workshop/content/431960/"
-                                                + currentWallpaper.substring(3)
-                                                + "/preview" + weExtensions[weExtIndex]
-                                        } else {
-                                            visible = false
-                                        }
-                                    }
                                 }
                                 fillMode: Image.PreserveAspectCrop
                                 visible: {
@@ -241,7 +219,6 @@ Item {
                                         }
                                     }
 
-
                                     Rectangle {
                                         width: 32
                                         height: 32
@@ -263,7 +240,7 @@ Item {
                                                     var currentWallpaper = SessionData.perMonitorWallpaper ? SessionData.getMonitorWallpaper(selectedMonitorName) : SessionData.wallpaperPath
                                                     PopoutService.colorPickerModal.selectedColor = currentWallpaper.startsWith("#") ? currentWallpaper : Theme.primary
                                                     PopoutService.colorPickerModal.pickerTitle = "Choose Wallpaper Color"
-                                                    PopoutService.colorPickerModal.onColorSelectedCallback = function(selectedColor) {
+                                                    PopoutService.colorPickerModal.onColorSelectedCallback = function (selectedColor) {
                                                         if (SessionData.perMonitorWallpaper) {
                                                             SessionData.setMonitorWallpaper(selectedMonitorName, selectedColor)
                                                         } else {
@@ -373,7 +350,7 @@ Item {
                                         var currentWallpaper = SessionData.perMonitorWallpaper ? SessionData.getMonitorWallpaper(selectedMonitorName) : SessionData.wallpaperPath
                                         return (currentWallpaper && !currentWallpaper.startsWith("#") && !currentWallpaper.startsWith("we")) ? 1 : 0.5
                                     }
-                                    backgroundColor: Theme.surfaceContainerHigh
+                                    backgroundColor: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                                     iconColor: Theme.surfaceText
                                     onClicked: {
                                         if (SessionData.perMonitorWallpaper) {
@@ -396,7 +373,7 @@ Item {
                                         var currentWallpaper = SessionData.perMonitorWallpaper ? SessionData.getMonitorWallpaper(selectedMonitorName) : SessionData.wallpaperPath
                                         return (currentWallpaper && !currentWallpaper.startsWith("#") && !currentWallpaper.startsWith("we")) ? 1 : 0.5
                                     }
-                                    backgroundColor: Theme.surfaceContainerHigh
+                                    backgroundColor: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                                     iconColor: Theme.surfaceText
                                     onClicked: {
                                         if (SessionData.perMonitorWallpaper) {
@@ -434,11 +411,11 @@ Item {
                                 return modes.indexOf(SettingsData.wallpaperFillMode)
                             }
                             onSelectionChanged: (index, selected) => {
-                                if (selected) {
-                                    const modes = ["Stretch", "Fit", "Fill", "Tile", "TileVertically", "TileHorizontally", "Pad"]
-                                    SettingsData.setWallpaperFillMode(modes[index])
-                                }
-                            }
+                                                    if (selected) {
+                                                        const modes = ["Stretch", "Fit", "Fill", "Tile", "TileVertically", "TileHorizontally", "Pad"]
+                                                        SettingsData.set("wallpaperFillMode", modes[index])
+                                                    }
+                                                }
 
                             Connections {
                                 target: SettingsData
@@ -452,67 +429,14 @@ Item {
                                 target: personalizationTab
                                 function onSelectedMonitorNameChanged() {
                                     Qt.callLater(() => {
-                                        const modes = ["Stretch", "Fit", "Fill", "Tile", "TileVertically", "TileHorizontally", "Pad"]
-                                        fillModeGroup.currentIndex = modes.indexOf(SettingsData.wallpaperFillMode)
-                                    })
+                                                     const modes = ["Stretch", "Fit", "Fill", "Tile", "TileVertically", "TileHorizontally", "Pad"]
+                                                     fillModeGroup.currentIndex = modes.indexOf(SettingsData.wallpaperFillMode)
+                                                 })
                                 }
                             }
                         }
                     }
 
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: Theme.outline
-                        opacity: 0.2
-                        visible: CompositorService.isNiri
-                    }
-
-                    Row {
-                        width: parent.width
-                        spacing: Theme.spacingM
-                        visible: CompositorService.isNiri
-
-                        DankIcon {
-                            name: "blur_on"
-                            size: Theme.iconSize
-                            color: SettingsData.blurWallpaperOnOverview ? Theme.primary : Theme.surfaceVariantText
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Column {
-                            width: parent.width - Theme.iconSize - Theme.spacingM - blurOverviewToggle.width - Theme.spacingM
-                            spacing: Theme.spacingXS
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            StyledText {
-                                text: I18n.tr("Blur on Overview")
-                                font.pixelSize: Theme.fontSizeLarge
-                                font.weight: Font.Medium
-                                color: Theme.surfaceText
-                            }
-
-                            StyledText {
-                                text: I18n.tr("Blur wallpaper when niri overview is open")
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.surfaceVariantText
-                                wrapMode: Text.WordWrap
-                                width: parent.width
-                            }
-                        }
-
-                        DankToggle {
-                            id: blurOverviewToggle
-
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: SettingsData.blurWallpaperOnOverview
-                            onToggled: checked => {
-                                SettingsData.setBlurWallpaperOnOverview(checked)
-                            }
-                        }
-                    }
-
-                    // Per-Mode Wallpaper Section - Full Width
                     Rectangle {
                         width: parent.width
                         height: 1
@@ -567,9 +491,450 @@ Item {
                                            }
                             }
                         }
+
+                        Column {
+                            width: parent.width
+                            spacing: Theme.spacingM
+                            visible: SessionData.perModeWallpaper
+
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width
+                                spacing: Theme.spacingL
+
+                                Column {
+                                    width: (parent.width - Theme.spacingL) / 2
+                                    spacing: Theme.spacingS
+
+                                    StyledText {
+                                        text: I18n.tr("Light Mode")
+                                        font.pixelSize: Theme.fontSizeMedium
+                                        color: Theme.surfaceText
+                                        font.weight: Font.Medium
+                                    }
+
+                                    StyledRect {
+                                        width: parent.width
+                                        height: width * 9 / 16
+                                        radius: Theme.cornerRadius
+                                        color: Theme.surfaceVariant
+                                        border.color: Theme.outline
+                                        border.width: 0
+
+                                        CachingImage {
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            source: {
+                                                var lightWallpaper = SessionData.wallpaperPathLight
+                                                return (lightWallpaper !== "" && !lightWallpaper.startsWith("#")) ? "file://" + lightWallpaper : ""
+                                            }
+                                            fillMode: Image.PreserveAspectCrop
+                                            visible: {
+                                                var lightWallpaper = SessionData.wallpaperPathLight
+                                                return lightWallpaper !== "" && !lightWallpaper.startsWith("#")
+                                            }
+                                            maxCacheSize: 160
+                                            layer.enabled: true
+
+                                            layer.effect: MultiEffect {
+                                                maskEnabled: true
+                                                maskSource: lightMask
+                                                maskThresholdMin: 0.5
+                                                maskSpreadAtMin: 1
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            radius: Theme.cornerRadius - 1
+                                            color: {
+                                                var lightWallpaper = SessionData.wallpaperPathLight
+                                                return lightWallpaper.startsWith("#") ? lightWallpaper : "transparent"
+                                            }
+                                            visible: {
+                                                var lightWallpaper = SessionData.wallpaperPathLight
+                                                return lightWallpaper !== "" && lightWallpaper.startsWith("#")
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            id: lightMask
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            radius: Theme.cornerRadius - 1
+                                            color: "black"
+                                            visible: false
+                                            layer.enabled: true
+                                        }
+
+                                        DankIcon {
+                                            anchors.centerIn: parent
+                                            name: "light_mode"
+                                            size: Theme.iconSizeLarge
+                                            color: Theme.surfaceVariantText
+                                            visible: SessionData.wallpaperPathLight === ""
+                                        }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            radius: Theme.cornerRadius - 1
+                                            color: Qt.rgba(0, 0, 0, 0.7)
+                                            visible: lightModeMouseArea.containsMouse
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 4
+
+                                                Rectangle {
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: Qt.rgba(255, 255, 255, 0.9)
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "folder_open"
+                                                        size: 16
+                                                        color: "black"
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            lightWallpaperBrowserLoader.active = true
+                                                        }
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: Qt.rgba(255, 255, 255, 0.9)
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "palette"
+                                                        size: 16
+                                                        color: "black"
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            if (PopoutService.colorPickerModal) {
+                                                                var lightWallpaper = SessionData.wallpaperPathLight
+                                                                PopoutService.colorPickerModal.selectedColor = lightWallpaper.startsWith("#") ? lightWallpaper : Theme.primary
+                                                                PopoutService.colorPickerModal.pickerTitle = "Choose Light Mode Color"
+                                                                PopoutService.colorPickerModal.onColorSelectedCallback = function(selectedColor) {
+                                                                    SessionData.wallpaperPathLight = selectedColor
+                                                                    SessionData.syncWallpaperForCurrentMode()
+                                                                    SessionData.saveSettings()
+                                                                }
+                                                                PopoutService.colorPickerModal.show()
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: Qt.rgba(255, 255, 255, 0.9)
+                                                    visible: SessionData.wallpaperPathLight !== ""
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "clear"
+                                                        size: 16
+                                                        color: "black"
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            SessionData.wallpaperPathLight = ""
+                                                            SessionData.syncWallpaperForCurrentMode()
+                                                            SessionData.saveSettings()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: lightModeMouseArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            propagateComposedEvents: true
+                                            acceptedButtons: Qt.NoButton
+                                        }
+                                    }
+
+                                    StyledText {
+                                        text: {
+                                            var lightWallpaper = SessionData.wallpaperPathLight
+                                            return lightWallpaper ? lightWallpaper.split('/').pop() : "Not set"
+                                        }
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        color: Theme.surfaceVariantText
+                                        elide: Text.ElideMiddle
+                                        maximumLineCount: 1
+                                        width: parent.width
+                                    }
+                                }
+
+                                Column {
+                                    width: (parent.width - Theme.spacingL) / 2
+                                    spacing: Theme.spacingS
+
+                                    StyledText {
+                                        text: I18n.tr("Dark Mode")
+                                        font.pixelSize: Theme.fontSizeMedium
+                                        color: Theme.surfaceText
+                                        font.weight: Font.Medium
+                                    }
+
+                                    StyledRect {
+                                        width: parent.width
+                                        height: width * 9 / 16
+                                        radius: Theme.cornerRadius
+                                        color: Theme.surfaceVariant
+                                        border.color: Theme.outline
+                                        border.width: 0
+
+                                        CachingImage {
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            source: {
+                                                var darkWallpaper = SessionData.wallpaperPathDark
+                                                return (darkWallpaper !== "" && !darkWallpaper.startsWith("#")) ? "file://" + darkWallpaper : ""
+                                            }
+                                            fillMode: Image.PreserveAspectCrop
+                                            visible: {
+                                                var darkWallpaper = SessionData.wallpaperPathDark
+                                                return darkWallpaper !== "" && !darkWallpaper.startsWith("#")
+                                            }
+                                            maxCacheSize: 160
+                                            layer.enabled: true
+
+                                            layer.effect: MultiEffect {
+                                                maskEnabled: true
+                                                maskSource: darkMask
+                                                maskThresholdMin: 0.5
+                                                maskSpreadAtMin: 1
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            radius: Theme.cornerRadius - 1
+                                            color: {
+                                                var darkWallpaper = SessionData.wallpaperPathDark
+                                                return darkWallpaper.startsWith("#") ? darkWallpaper : "transparent"
+                                            }
+                                            visible: {
+                                                var darkWallpaper = SessionData.wallpaperPathDark
+                                                return darkWallpaper !== "" && darkWallpaper.startsWith("#")
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            id: darkMask
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            radius: Theme.cornerRadius - 1
+                                            color: "black"
+                                            visible: false
+                                            layer.enabled: true
+                                        }
+
+                                        DankIcon {
+                                            anchors.centerIn: parent
+                                            name: "dark_mode"
+                                            size: Theme.iconSizeLarge
+                                            color: Theme.surfaceVariantText
+                                            visible: SessionData.wallpaperPathDark === ""
+                                        }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            radius: Theme.cornerRadius - 1
+                                            color: Qt.rgba(0, 0, 0, 0.7)
+                                            visible: darkModeMouseArea.containsMouse
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 4
+
+                                                Rectangle {
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: Qt.rgba(255, 255, 255, 0.9)
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "folder_open"
+                                                        size: 16
+                                                        color: "black"
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            darkWallpaperBrowserLoader.active = true
+                                                        }
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: Qt.rgba(255, 255, 255, 0.9)
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "palette"
+                                                        size: 16
+                                                        color: "black"
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            if (PopoutService.colorPickerModal) {
+                                                                var darkWallpaper = SessionData.wallpaperPathDark
+                                                                PopoutService.colorPickerModal.selectedColor = darkWallpaper.startsWith("#") ? darkWallpaper : Theme.primary
+                                                                PopoutService.colorPickerModal.pickerTitle = "Choose Dark Mode Color"
+                                                                PopoutService.colorPickerModal.onColorSelectedCallback = function(selectedColor) {
+                                                                    SessionData.wallpaperPathDark = selectedColor
+                                                                    SessionData.syncWallpaperForCurrentMode()
+                                                                    SessionData.saveSettings()
+                                                                }
+                                                                PopoutService.colorPickerModal.show()
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: Qt.rgba(255, 255, 255, 0.9)
+                                                    visible: SessionData.wallpaperPathDark !== ""
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "clear"
+                                                        size: 16
+                                                        color: "black"
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            SessionData.wallpaperPathDark = ""
+                                                            SessionData.syncWallpaperForCurrentMode()
+                                                            SessionData.saveSettings()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: darkModeMouseArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            propagateComposedEvents: true
+                                            acceptedButtons: Qt.NoButton
+                                        }
+                                    }
+
+                                    StyledText {
+                                        text: {
+                                            var darkWallpaper = SessionData.wallpaperPathDark
+                                            return darkWallpaper ? darkWallpaper.split('/').pop() : "Not set"
+                                        }
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        color: Theme.surfaceVariantText
+                                        elide: Text.ElideMiddle
+                                        maximumLineCount: 1
+                                        width: parent.width
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    // Per-Monitor Wallpaper Section - Full Width
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: Theme.outline
+                        opacity: 0.2
+                        visible: CompositorService.isNiri
+                    }
+
+                    Row {
+                        width: parent.width
+                        spacing: Theme.spacingM
+                        visible: CompositorService.isNiri
+
+                        DankIcon {
+                            name: "blur_on"
+                            size: Theme.iconSize
+                            color: SettingsData.blurWallpaperOnOverview ? Theme.primary : Theme.surfaceVariantText
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Column {
+                            width: parent.width - Theme.iconSize - Theme.spacingM - blurOverviewToggle.width - Theme.spacingM
+                            spacing: Theme.spacingXS
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            StyledText {
+                                text: I18n.tr("Blur on Overview")
+                                font.pixelSize: Theme.fontSizeLarge
+                                font.weight: Font.Medium
+                                color: Theme.surfaceText
+                            }
+
+                            StyledText {
+                                text: I18n.tr("Blur wallpaper when niri overview is open")
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.surfaceVariantText
+                                wrapMode: Text.WordWrap
+                                width: parent.width
+                            }
+                        }
+
+                        DankToggle {
+                            id: blurOverviewToggle
+
+                            anchors.verticalCenter: parent.verticalCenter
+                            checked: SettingsData.blurWallpaperOnOverview
+                            onToggled: checked => {
+                                           SettingsData.set("blurWallpaperOnOverview", checked)
+                                       }
+                        }
+                    }
+
                     Rectangle {
                         width: parent.width
                         height: 1
@@ -641,7 +1006,7 @@ Item {
                             DankDropdown {
                                 id: monitorDropdown
 
-                                text: I18n.tr("Monitor")
+                                text: I18n.tr("Wallpaper Monitor")
                                 description: I18n.tr("Select monitor to configure wallpaper")
                                 currentValue: selectedMonitorName || "No monitors"
                                 options: {
@@ -654,6 +1019,36 @@ Item {
                                 }
                                 onValueChanged: value => {
                                                     selectedMonitorName = value
+                                                }
+                            }
+
+                            DankDropdown {
+                                id: matugenTargetDropdown
+
+                                text: I18n.tr("Matugen Target Monitor")
+                                description: I18n.tr("Monitor whose wallpaper drives dynamic theming colors")
+                                currentValue: {
+                                    if (!SettingsData.matugenTargetMonitor || SettingsData.matugenTargetMonitor === "") {
+                                        var screens = Quickshell.screens
+                                        return screens.length > 0 ? screens[0].name + " (Default)" : "No monitors"
+                                    }
+                                    return SettingsData.matugenTargetMonitor
+                                }
+                                options: {
+                                    var screenNames = []
+                                    var screens = Quickshell.screens
+                                    for (var i = 0; i < screens.length; i++) {
+                                        var label = screens[i].name
+                                        if (i === 0 && (!SettingsData.matugenTargetMonitor || SettingsData.matugenTargetMonitor === "")) {
+                                            label += " (Default)"
+                                        }
+                                        screenNames.push(label)
+                                    }
+                                    return screenNames
+                                }
+                                onValueChanged: value => {
+                                                    var cleanValue = value.replace(" (Default)", "")
+                                                    SettingsData.setMatugenTargetMonitor(cleanValue)
                                                 }
                             }
                         }
@@ -720,8 +1115,8 @@ Item {
                                     target: personalizationTab
                                     function onSelectedMonitorNameChanged() {
                                         cyclingToggle.checked = Qt.binding(() => {
-                                            return SessionData.perMonitorWallpaper ? SessionData.getMonitorCyclingSettings(selectedMonitorName).enabled : SessionData.wallpaperCyclingEnabled
-                                        })
+                                                                               return SessionData.perMonitorWallpaper ? SessionData.getMonitorCyclingSettings(selectedMonitorName).enabled : SessionData.wallpaperCyclingEnabled
+                                                                           })
                                     }
                                 }
                             }
@@ -779,12 +1174,12 @@ Item {
                                             target: personalizationTab
                                             function onSelectedMonitorNameChanged() {
                                                 modeTabBar.currentIndex = Qt.binding(() => {
-                                                    if (SessionData.perMonitorWallpaper) {
-                                                        return SessionData.getMonitorCyclingSettings(selectedMonitorName).mode === "time" ? 1 : 0
-                                                    } else {
-                                                        return SessionData.wallpaperCyclingMode === "time" ? 1 : 0
-                                                    }
-                                                })
+                                                                                         if (SessionData.perMonitorWallpaper) {
+                                                                                             return SessionData.getMonitorCyclingSettings(selectedMonitorName).mode === "time" ? 1 : 0
+                                                                                         } else {
+                                                                                             return SessionData.wallpaperCyclingMode === "time" ? 1 : 0
+                                                                                         }
+                                                                                     })
                                                 Qt.callLater(modeTabBar.updateIndicator)
                                             }
                                         }
@@ -835,15 +1230,15 @@ Item {
                                     function onSelectedMonitorNameChanged() {
                                         // Force dropdown to refresh its currentValue
                                         Qt.callLater(() => {
-                                            var currentSeconds
-                                            if (SessionData.perMonitorWallpaper) {
-                                                currentSeconds = SessionData.getMonitorCyclingSettings(selectedMonitorName).interval
-                                            } else {
-                                                currentSeconds = SessionData.wallpaperCyclingInterval
-                                            }
-                                            const index = intervalDropdown.intervalValues.indexOf(currentSeconds)
-                                            intervalDropdown.currentValue = index >= 0 ? intervalDropdown.intervalOptions[index] : "5 minutes"
-                                        })
+                                                         var currentSeconds
+                                                         if (SessionData.perMonitorWallpaper) {
+                                                             currentSeconds = SessionData.getMonitorCyclingSettings(selectedMonitorName).interval
+                                                         } else {
+                                                             currentSeconds = SessionData.wallpaperCyclingInterval
+                                                         }
+                                                         const index = intervalDropdown.intervalValues.indexOf(currentSeconds)
+                                                         intervalDropdown.currentValue = index >= 0 ? intervalDropdown.intervalOptions[index] : "5 minutes"
+                                                     })
                                     }
                                 }
                             }
@@ -925,12 +1320,12 @@ Item {
                                         function onSelectedMonitorNameChanged() {
                                             // Force text field to refresh its value
                                             Qt.callLater(() => {
-                                                if (SessionData.perMonitorWallpaper) {
-                                                    timeTextField.text = SessionData.getMonitorCyclingSettings(selectedMonitorName).time
-                                                } else {
-                                                    timeTextField.text = SessionData.wallpaperCyclingTime
-                                                }
-                                            })
+                                                             if (SessionData.perMonitorWallpaper) {
+                                                                 timeTextField.text = SessionData.getMonitorCyclingSettings(selectedMonitorName).time
+                                                             } else {
+                                                                 timeTextField.text = SessionData.wallpaperCyclingTime
+                                                             }
+                                                         })
                                         }
                                     }
                                 }
@@ -956,14 +1351,15 @@ Item {
                         text: I18n.tr("Transition Effect")
                         description: I18n.tr("Visual effect used when wallpaper changes")
                         currentValue: {
-                            if (SessionData.wallpaperTransition === "random") return "Random"
+                            if (SessionData.wallpaperTransition === "random")
+                                return "Random"
                             return SessionData.wallpaperTransition.charAt(0).toUpperCase() + SessionData.wallpaperTransition.slice(1)
                         }
                         options: ["Random"].concat(SessionData.availableWallpaperTransitions.map(t => t.charAt(0).toUpperCase() + t.slice(1)))
                         onValueChanged: value => {
-                            var transition = value.toLowerCase()
-                            SessionData.setWallpaperTransition(transition)
-                        }
+                                            var transition = value.toLowerCase()
+                                            SessionData.setWallpaperTransition(transition)
+                                        }
                     }
 
                     Column {
@@ -995,17 +1391,17 @@ Item {
                             currentSelection: SessionData.includedTransitions
 
                             onSelectionChanged: (index, selected) => {
-                                const transition = model[index]
-                                let newIncluded = [...SessionData.includedTransitions]
+                                                    const transition = model[index]
+                                                    let newIncluded = [...SessionData.includedTransitions]
 
-                                if (selected && !newIncluded.includes(transition)) {
-                                    newIncluded.push(transition)
-                                } else if (!selected && newIncluded.includes(transition)) {
-                                    newIncluded = newIncluded.filter(t => t !== transition)
-                                }
+                                                    if (selected && !newIncluded.includes(transition)) {
+                                                        newIncluded.push(transition)
+                                                    } else if (!selected && newIncluded.includes(transition)) {
+                                                        newIncluded = newIncluded.filter(t => t !== transition)
+                                                    }
 
-                                SessionData.includedTransitions = newIncluded
-                            }
+                                                    SessionData.includedTransitions = newIncluded
+                                                }
                         }
                     }
                 }
@@ -1015,7 +1411,7 @@ Item {
                 width: parent.width
                 height: blurLayerColumn.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
                 visible: CompositorService.isNiri
@@ -1065,8 +1461,8 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             checked: SettingsData.blurredWallpaperLayer
                             onToggled: checked => {
-                                SettingsData.setBlurredWallpaperLayer(checked)
-                            }
+                                           SettingsData.set("blurredWallpaperLayer", checked)
+                                       }
                         }
                     }
                 }
@@ -1076,7 +1472,7 @@ Item {
                 width: parent.width
                 height: lightModeRow.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
 
@@ -1122,9 +1518,9 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         checked: SessionData.isLightMode
                         onToggleCompleted: checked => {
-                                       Theme.screenTransition()
-                                       Theme.setLightMode(checked)
-                                   }
+                                               Theme.screenTransition()
+                                               Theme.setLightMode(checked)
+                                           }
                     }
                 }
             }
@@ -1134,7 +1530,7 @@ Item {
                 width: parent.width
                 height: animationSection.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
 
@@ -1176,10 +1572,10 @@ Item {
                             selectionMode: "single"
                             currentIndex: SettingsData.animationSpeed
                             onSelectionChanged: (index, selected) => {
-                                if (selected) {
-                                    SettingsData.setAnimationSpeed(index)
-                                }
-                            }
+                                                    if (selected) {
+                                                        SettingsData.set("animationSpeed", index)
+                                                    }
+                                                }
 
                             Connections {
                                 target: SettingsData
@@ -1257,10 +1653,10 @@ Item {
                                         showValue: false
                                         wheelEnabled: false
 
-                                        onSliderValueChanged: (newValue) => {
-                                            SettingsData.setAnimationSpeed(SettingsData.AnimationSpeed.Custom)
-                                            SettingsData.setCustomAnimationDuration(newValue)
-                                        }
+                                        onSliderValueChanged: newValue => {
+                                                                  SettingsData.set("animationSpeed", SettingsData.AnimationSpeed.Custom)
+                                                                  SettingsData.set("customAnimationDuration", newValue)
+                                                              }
 
                                         Connections {
                                             target: SettingsData
@@ -1306,7 +1702,7 @@ Item {
                 width: parent.width
                 height: dynamicThemeSection.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
 
@@ -1388,19 +1784,21 @@ Item {
                         id: personalizationMatugenPaletteDropdown
                         text: I18n.tr("Matugen Palette")
                         description: I18n.tr("Select the palette algorithm used for wallpaper-based colors")
-                        options: Theme.availableMatugenSchemes.map(function (option) { return option.label })
+                        options: Theme.availableMatugenSchemes.map(function (option) {
+                            return option.label
+                        })
                         currentValue: Theme.getMatugenScheme(SettingsData.matugenScheme).label
                         enabled: Theme.matugenAvailable
                         opacity: enabled ? 1 : 0.4
                         onValueChanged: value => {
-                            for (var i = 0; i < Theme.availableMatugenSchemes.length; i++) {
-                                var option = Theme.availableMatugenSchemes[i]
-                                if (option.label === value) {
-                                    SettingsData.setMatugenScheme(option.value)
-                                    break
-                                }
-                            }
-                        }
+                                            for (var i = 0; i < Theme.availableMatugenSchemes.length; i++) {
+                                                var option = Theme.availableMatugenSchemes[i]
+                                                if (option.label === value) {
+                                                    SettingsData.setMatugenScheme(option.value)
+                                                    break
+                                                }
+                                            }
+                                        }
                     }
 
                     StyledText {
@@ -1459,8 +1857,8 @@ Item {
                             checked: SettingsData.runUserMatugenTemplates
                             enabled: Theme.matugenAvailable
                             onToggled: checked => {
-                                SettingsData.setRunUserMatugenTemplates(checked)
-                            }
+                                           SettingsData.setRunUserMatugenTemplates(checked)
+                                       }
                         }
                     }
 
@@ -1479,7 +1877,7 @@ Item {
                 width: parent.width
                 height: soundsSection.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
                 visible: AudioService.soundsAvailable
@@ -1528,8 +1926,8 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             checked: SettingsData.soundsEnabled
                             onToggled: checked => {
-                                SettingsData.setSoundsEnabled(checked)
-                            }
+                                           SettingsData.set("soundsEnabled", checked)
+                                       }
                         }
                     }
 
@@ -1576,8 +1974,8 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 checked: SettingsData.useSystemSoundTheme
                                 onToggled: checked => {
-                                    SettingsData.setUseSystemSoundTheme(checked)
-                                }
+                                               SettingsData.set("useSystemSoundTheme", checked)
+                                           }
                             }
                         }
 
@@ -1598,10 +1996,10 @@ Item {
                                 return AudioService.availableSoundThemes.length > 0 ? AudioService.availableSoundThemes[0] : ""
                             }
                             onValueChanged: value => {
-                                if (value && value !== AudioService.currentSoundTheme) {
-                                    AudioService.setSoundTheme(value)
-                                }
-                            }
+                                                if (value && value !== AudioService.currentSoundTheme) {
+                                                    AudioService.setSoundTheme(value)
+                                                }
+                                            }
                         }
 
                         Rectangle {
@@ -1641,8 +2039,8 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 checked: SettingsData.soundNewNotification
                                 onToggled: checked => {
-                                    SettingsData.setSoundNewNotification(checked)
-                                }
+                                               SettingsData.set("soundNewNotification", checked)
+                                           }
                             }
                         }
 
@@ -1675,8 +2073,8 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 checked: SettingsData.soundVolumeChanged
                                 onToggled: checked => {
-                                    SettingsData.setSoundVolumeChanged(checked)
-                                }
+                                               SettingsData.set("soundVolumeChanged", checked)
+                                           }
                             }
                         }
 
@@ -1710,8 +2108,8 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 checked: SettingsData.soundPluggedIn
                                 onToggled: checked => {
-                                    SettingsData.setSoundPluggedIn(checked)
-                                }
+                                               SettingsData.set("soundPluggedIn", checked)
+                                           }
                             }
                         }
                     }
@@ -1745,6 +2143,60 @@ Item {
                             }
             onDialogClosed: {
                 Qt.callLater(() => wallpaperBrowserLoader.active = false)
+            }
+        }
+    }
+
+    Loader {
+        id: lightWallpaperBrowserLoader
+        active: false
+        asynchronous: true
+
+        sourceComponent: FileBrowserModal {
+            parentModal: personalizationTab.parentModal
+            Component.onCompleted: {
+                open()
+            }
+            browserTitle: "Select Light Mode Wallpaper"
+            browserIcon: "light_mode"
+            browserType: "wallpaper"
+            showHiddenFiles: true
+            fileExtensions: ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif", "*.webp"]
+            onFileSelected: path => {
+                                SessionData.wallpaperPathLight = path
+                                SessionData.syncWallpaperForCurrentMode()
+                                SessionData.saveSettings()
+                                close()
+                            }
+            onDialogClosed: {
+                Qt.callLater(() => lightWallpaperBrowserLoader.active = false)
+            }
+        }
+    }
+
+    Loader {
+        id: darkWallpaperBrowserLoader
+        active: false
+        asynchronous: true
+
+        sourceComponent: FileBrowserModal {
+            parentModal: personalizationTab.parentModal
+            Component.onCompleted: {
+                open()
+            }
+            browserTitle: "Select Dark Mode Wallpaper"
+            browserIcon: "dark_mode"
+            browserType: "wallpaper"
+            showHiddenFiles: true
+            fileExtensions: ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif", "*.webp"]
+            onFileSelected: path => {
+                                SessionData.wallpaperPathDark = path
+                                SessionData.syncWallpaperForCurrentMode()
+                                SessionData.saveSettings()
+                                close()
+                            }
+            onDialogClosed: {
+                Qt.callLater(() => darkWallpaperBrowserLoader.active = false)
             }
         }
     }

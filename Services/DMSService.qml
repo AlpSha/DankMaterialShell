@@ -1,6 +1,6 @@
 pragma Singleton
 
-pragma ComponentBehavior: Bound
+pragma ComponentBehavior
 
 import QtCore
 import QtQuick
@@ -34,14 +34,18 @@ Singleton {
     signal searchResultsReceived(var plugins)
     signal operationSuccess(string message)
     signal operationError(string error)
-    signal connectionStateChanged()
+    signal connectionStateChanged
 
     signal networkStateUpdate(var data)
+    signal cupsStateUpdate(var data)
     signal loginctlStateUpdate(var data)
     signal loginctlEvent(var event)
-    signal capabilitiesReceived()
+    signal capabilitiesReceived
     signal credentialsRequest(var data)
     signal bluetoothPairingRequest(var data)
+    signal dwlStateUpdate(var data)
+    signal brightnessStateUpdate(var data)
+    signal brightnessDeviceUpdate(var device)
 
     Component.onCompleted: {
         if (socketPath && socketPath.length > 0) {
@@ -225,11 +229,7 @@ Singleton {
             if (response.error.includes("unknown method") && response.error.includes("subscribe")) {
                 if (!shownOutdatedError) {
                     console.error("DMSService: Server does not support subscribe method")
-                    ToastService.showError(
-                        I18n.tr("DMS out of date"),
-                        I18n.tr("To update, run the following command:"),
-                        updateCommand
-                    )
+                    ToastService.showError(I18n.tr("DMS out of date"), I18n.tr("To update, run the following command:"), updateCommand)
                     shownOutdatedError = true
                 }
             }
@@ -266,6 +266,16 @@ Singleton {
             }
         } else if (service === "bluetooth.pairing") {
             bluetoothPairingRequest(data)
+        } else if (service === "cups") {
+            cupsStateUpdate(data)
+        } else if (service === "dwl") {
+            dwlStateUpdate(data)
+        } else if (service === "brightness") {
+            brightnessStateUpdate(data)
+        } else if (service === "brightness.update") {
+            if (data.device) {
+                brightnessDeviceUpdate(data.device)
+            }
         }
     }
 
@@ -274,8 +284,8 @@ Singleton {
             console.warn("DMSService.sendRequest: Not connected, method:", method)
             if (callback) {
                 callback({
-                    "error": "not connected to DMS socket"
-                })
+                             "error": "not connected to DMS socket"
+                         })
             }
             return
         }

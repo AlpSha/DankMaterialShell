@@ -37,7 +37,26 @@ BasePill {
             }
 
             IconImage {
-                visible: SettingsData.launcherLogoMode === "compositor"
+                visible: SettingsData.launcherLogoMode === "dank"
+                anchors.centerIn: parent
+                width: Theme.barIconSize(root.barThickness, SettingsData.launcherLogoSizeOffset)
+                height: Theme.barIconSize(root.barThickness, SettingsData.launcherLogoSizeOffset)
+                smooth: true
+                mipmap: true
+                asynchronous: true
+                source: "file://" + Theme.shellDir + "/assets/danklogo.svg"
+                layer.enabled: Theme.effectiveLogoColor !== ""
+                layer.smooth: true
+                layer.mipmap: true
+                layer.effect: MultiEffect {
+                    saturation: 0
+                    colorization: 1
+                    colorizationColor: Theme.effectiveLogoColor
+                }
+            }
+
+            IconImage {
+                visible: SettingsData.launcherLogoMode === "compositor" && (CompositorService.isNiri || CompositorService.isHyprland || CompositorService.isDwl || CompositorService.isSway)
                 anchors.centerIn: parent
                 width: Theme.barIconSize(root.barThickness, SettingsData.launcherLogoSizeOffset)
                 height: Theme.barIconSize(root.barThickness, SettingsData.launcherLogoSizeOffset)
@@ -48,6 +67,10 @@ BasePill {
                         return "file://" + Theme.shellDir + "/assets/niri.svg"
                     } else if (CompositorService.isHyprland) {
                         return "file://" + Theme.shellDir + "/assets/hyprland.svg"
+                    } else if (CompositorService.isDwl) {
+                        return "file://" + Theme.shellDir + "/assets/mango.png"
+                    } else if (CompositorService.isSway) {
+                        return "file://" + Theme.shellDir + "/assets/sway.svg"
                     }
                     return ""
                 }
@@ -56,8 +79,12 @@ BasePill {
                     saturation: 0
                     colorization: 1
                     colorizationColor: Theme.effectiveLogoColor
-                    brightness: SettingsData.launcherLogoBrightness
-                    contrast: SettingsData.launcherLogoContrast
+                    brightness: {
+                        SettingsData.launcherLogoBrightness
+                    }
+                    contrast: {
+                        SettingsData.launcherLogoContrast
+                    }
                 }
             }
 
@@ -81,17 +108,11 @@ BasePill {
         }
     }
 
-    MouseArea {
-        id: customMouseArea
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.RightButton
-        onPressed: function (mouse){
-            if (CompositorService.isNiri) {
-                NiriService.toggleOverview()
-            } else if (root.hyprlandOverviewLoader?.item) {
-                root.hyprlandOverviewLoader.item.overviewOpen = !root.hyprlandOverviewLoader.item.overviewOpen
-            }
+    onRightClicked: {
+        if (CompositorService.isNiri) {
+            NiriService.toggleOverview()
+        } else if (root.hyprlandOverviewLoader?.item) {
+            root.hyprlandOverviewLoader.item.overviewOpen = !root.hyprlandOverviewLoader.item.overviewOpen
         }
     }
 }

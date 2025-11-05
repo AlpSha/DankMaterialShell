@@ -37,7 +37,15 @@ Singleton {
     property bool matugenSuppression: false
     property bool configGenerationPending: false
 
+    readonly property string screenshotsDir: Paths.strip(StandardPaths.writableLocation(StandardPaths.PicturesLocation)) + "/Screenshots"
+    property string pendingScreenshotPath: ""
+
     signal windowUrgentChanged
+
+    function setWorkspaces(newMap) {
+        root.workspaces = newMap
+        allWorkspaces = Object.values(newMap).sort((a, b) => a.idx - b.idx)
+    }
 
     Component.onCompleted: fetchOutputs()
 
@@ -70,7 +78,7 @@ Singleton {
                 const trimmedLines = lines.map(line => line.replace(/\s+$/, '')).filter(line => line.length > 0)
                 configValidationOutput = trimmedLines.join('\n').trim()
                 if (hasInitialConnection) {
-                    ToastService.showError("niri: failed to load config", configValidationOutput)
+                    ToastService.showError("niri: failed to load config", configValidationOutput, "", "niri-config")
                 }
             }
         }
@@ -266,6 +274,9 @@ Singleton {
         case 'WorkspaceUrgencyChanged':
             handleWorkspaceUrgencyChanged(event.WorkspaceUrgencyChanged)
             break
+        case 'ScreenshotCaptured':
+            handleScreenshotCaptured(event.ScreenshotCaptured)
+            break
         }
     }
 
@@ -280,8 +291,7 @@ Singleton {
             }
         }
 
-        root.workspaces = newWorkspaces
-        allWorkspaces = Object.values(newWorkspaces).sort((a, b) => a.idx - b.idx)
+        setWorkspaces(newWorkspaces)
 
         focusedWorkspaceIndex = allWorkspaces.findIndex(w => w.is_focused)
         if (focusedWorkspaceIndex >= 0) {
@@ -325,17 +335,14 @@ Singleton {
             updatedWorkspaces[id] = updatedWs
         }
 
-        root.workspaces = updatedWorkspaces
+        setWorkspaces(updatedWorkspaces)
 
         focusedWorkspaceId = data.id
-        focusedWorkspaceIndex = Object.values(updatedWorkspaces).findIndex(w => w.id === data.id)
+        focusedWorkspaceIndex = allWorkspaces.findIndex(w => w.id === data.id)
 
         if (focusedWorkspaceIndex >= 0) {
-            const ws = Object.values(updatedWorkspaces)[focusedWorkspaceIndex]
-            currentOutput = ws.output || ""
+            currentOutput = allWorkspaces[focusedWorkspaceIndex].output || ""
         }
-
-        allWorkspaces = Object.values(updatedWorkspaces).sort((a, b) => a.idx - b.idx)
 
         updateCurrentOutputWorkspaces()
     }
@@ -377,7 +384,7 @@ Singleton {
                 for (const id in root.workspaces) {
                     updatedWorkspaces[id] = id === focusedWindow.workspace_id ? updatedWs : root.workspaces[id]
                 }
-                root.workspaces = updatedWorkspaces
+                setWorkspaces(updatedWorkspaces)
             }
         }
     }
@@ -395,7 +402,7 @@ Singleton {
             for (const id in root.workspaces) {
                 updatedWorkspaces[id] = id === data.workspace_id ? updatedWs : root.workspaces[id]
             }
-            root.workspaces = updatedWorkspaces
+            setWorkspaces(updatedWorkspaces)
         }
 
         const updatedWindows = []
@@ -491,12 +498,10 @@ Singleton {
             validateProcess.running = true
         } else {
             configValidationOutput = ""
-            if (ToastService.toastVisible && ToastService.currentLevel === ToastService.levelError && ToastService.currentMessage.startsWith("niri:")) {
-                ToastService.hideToast()
-            }
+            ToastService.dismissCategory("niri-config")
             fetchOutputs()
             if (hasInitialConnection && !suppressConfigToast && !suppressNextConfigToast && !matugenSuppression) {
-                ToastService.showInfo("niri: config reloaded")
+                ToastService.showInfo("niri: config reloaded", "", "", "niri-config")
             } else if (suppressNextConfigToast) {
                 suppressNextConfigToast = false
                 suppressResetTimer.stop()
@@ -533,11 +538,23 @@ Singleton {
         for (const id in root.workspaces) {
             updatedWorkspaces[id] = id === data.id ? updatedWs : root.workspaces[id]
         }
-        root.workspaces = updatedWorkspaces
-
-        allWorkspaces = Object.values(updatedWorkspaces).sort((a, b) => a.idx - b.idx)
+        setWorkspaces(updatedWorkspaces)
 
         windowUrgentChanged()
+    }
+
+    function handleScreenshotCaptured(data) {
+        if (!data.path)
+            return
+
+        if (pendingScreenshotPath && data.path === pendingScreenshotPath) {
+            const editor = Quickshell.env("DMS_SCREENSHOT_EDITOR")
+            const command = editor === "satty" ? ["satty", "-f", data.path] : ["swappy", "-f", data.path]
+            Quickshell.execDetached({
+                command: command
+            })
+            pendingScreenshotPath = ""
+        }
     }
 
     function updateCurrentOutputWorkspaces() {
@@ -628,6 +645,56 @@ Singleton {
                         "Action": {
                             "Quit": {
                                 "skip_confirmation": true
+                            }
+                        }
+                    })
+    }
+
+    function screenshot() {
+        pendingScreenshotPath = ""
+        const timestamp = Date.now()
+        const path = `${screenshotsDir}/dms-screenshot-${timestamp}.png`
+        pendingScreenshotPath = path
+
+        return send({
+                        "Action": {
+                            "Screenshot": {
+                                "show_pointer": true,
+                                "path": path
+                            }
+                        }
+                    })
+    }
+
+    function screenshotScreen() {
+        pendingScreenshotPath = ""
+        const timestamp = Date.now()
+        const path = `${screenshotsDir}/dms-screenshot-${timestamp}.png`
+        pendingScreenshotPath = path
+
+        return send({
+                        "Action": {
+                            "ScreenshotScreen": {
+                                "write_to_disk": true,
+                                "show_pointer": true,
+                                "path": path
+                            }
+                        }
+                    })
+    }
+
+    function screenshotWindow() {
+        pendingScreenshotPath = ""
+        const timestamp = Date.now()
+        const path = `${screenshotsDir}/dms-screenshot-${timestamp}.png`
+        pendingScreenshotPath = path
+
+        return send({
+                        "Action": {
+                            "ScreenshotWindow": {
+                                "write_to_disk": true,
+                                "show_pointer": true,
+                                "path": path
                             }
                         }
                     })
@@ -891,5 +958,52 @@ window-rule {
         writeBindsProcess.bindsPath = bindsPath
         writeBindsProcess.command = ["sh", "-c", `mkdir -p "${niriDmsDir}" && cp --no-preserve=mode "${sourceBindsPath}" "${bindsPath}"`]
         writeBindsProcess.running = true
+    }
+
+    function generateNiriBlurrule() {
+        console.log("NiriService: Generating wpblur config...")
+
+        const configDir = Paths.strip(StandardPaths.writableLocation(StandardPaths.ConfigLocation))
+        const niriDmsDir = configDir + "/niri/dms"
+        const blurrulePath = niriDmsDir + "/wpblur.kdl"
+        const sourceBlurrulePath = Paths.strip(Qt.resolvedUrl("niri-wpblur.kdl"))
+
+        writeBindsProcess.bindsPath = blurrulePath
+        writeBindsProcess.command = ["sh", "-c", `mkdir -p "${niriDmsDir}" && cp --no-preserve=mode "${sourceBlurrulePath}" "${blurrulePath}"`]
+        writeBindsProcess.running = true
+    }
+
+    IpcHandler {
+        function screenshot(): string {
+            if (!CompositorService.isNiri) {
+                return "NIRI_NOT_AVAILABLE"
+            }
+            if (NiriService.screenshot()) {
+                return "SCREENSHOT_SUCCESS"
+            }
+            return "SCREENSHOT_FAILED"
+        }
+
+        function screenshotScreen(): string {
+            if (!CompositorService.isNiri) {
+                return "NIRI_NOT_AVAILABLE"
+            }
+            if (NiriService.screenshotScreen()) {
+                return "SCREENSHOT_SCREEN_SUCCESS"
+            }
+            return "SCREENSHOT_SCREEN_FAILED"
+        }
+
+        function screenshotWindow(): string {
+            if (!CompositorService.isNiri) {
+                return "NIRI_NOT_AVAILABLE"
+            }
+            if (NiriService.screenshotWindow()) {
+                return "SCREENSHOT_WINDOW_SUCCESS"
+            }
+            return "SCREENSHOT_WINDOW_FAILED"
+        }
+
+        target: "niri"
     }
 }

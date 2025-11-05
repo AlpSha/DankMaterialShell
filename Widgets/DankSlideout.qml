@@ -57,9 +57,21 @@ PanelWindow {
     WlrLayershell.exclusiveZone: 0
     WlrLayershell.keyboardFocus: isVisible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
+    mask: Region {
+        item: Rectangle {
+            x: root.width - contentRect.width
+            y: 0
+            width: contentRect.width
+            height: root.height
+        }
+    }
+
     StyledRect {
         id: contentRect
         layer.enabled: true
+        layer.smooth: true
+        layer.textureSize: Qt.size(width * Math.max(2, root.modelData?.devicePixelRatio || 1), height * Math.max(2, root.modelData?.devicePixelRatio || 1))
+        layer.samples: 4
 
         anchors.top: parent.top
         anchors.bottom: parent.bottom

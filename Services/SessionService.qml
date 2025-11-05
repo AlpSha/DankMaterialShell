@@ -6,6 +6,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.I3
 import Quickshell.Wayland
 import qs.Common
 
@@ -184,7 +185,16 @@ Singleton {
                 return
             }
 
-            // Hyprland fallback
+            if (CompositorService.isDwl) {
+                DwlService.quit()
+                return
+            }
+
+            if (CompositorService.isSway) {
+                try { I3.dispatch("exit") } catch(_){}
+                return
+            }
+
             Hyprland.dispatch("exit")
         } else {
             Quickshell.execDetached(["sh", "-c", SettingsData.customPowerActionLogout])
@@ -204,6 +214,20 @@ Singleton {
             Quickshell.execDetached([isElogind ? "loginctl" : "systemctl", "hibernate"])
         } else {
             Quickshell.execDetached(["sh", "-c", SettingsData.customPowerActionHibernate])
+        }
+    }
+
+    function suspendThenHibernate() {
+        Quickshell.execDetached([isElogind ? "loginctl" : "systemctl", "suspend-then-hibernate"])
+    }
+
+    function suspendWithBehavior(behavior) {
+        if (behavior === SettingsData.SuspendBehavior.Hibernate) {
+            hibernate()
+        } else if (behavior === SettingsData.SuspendBehavior.SuspendThenHibernate) {
+            suspendThenHibernate()
+        } else {
+            suspend()
         }
     }
 

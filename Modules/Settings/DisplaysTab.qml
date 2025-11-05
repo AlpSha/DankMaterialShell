@@ -59,7 +59,7 @@ Item {
         var prefs = SettingsData.screenPreferences || {};
         var newPrefs = Object.assign({}, prefs);
         newPrefs[componentId] = screenNames;
-        SettingsData.setScreenPreferences(newPrefs);
+        SettingsData.set("screenPreferences", newPrefs);
     }
 
     function getShowOnLastDisplay(componentId) {
@@ -70,7 +70,7 @@ Item {
         var prefs = SettingsData.showOnLastDisplay || {};
         var newPrefs = Object.assign({}, prefs);
         newPrefs[componentId] = enabled;
-        SettingsData.setShowOnLastDisplay(newPrefs);
+        SettingsData.set("showOnLastDisplay", newPrefs);
     }
 
     DankFlickable {
@@ -91,7 +91,7 @@ Item {
                 width: parent.width
                 height: gammaSection.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
 
@@ -145,14 +145,14 @@ Item {
 
                     Column {
                         width: parent.width
-                        spacing: 0
+                        spacing: Theme.spacingS
                         leftPadding: Theme.spacingM
                         rightPadding: Theme.spacingM
                         visible: DisplayService.gammaControlAvailable
 
                         DankDropdown {
                             width: parent.width - parent.leftPadding - parent.rightPadding
-                            text: I18n.tr("Temperature")
+                            text: I18n.tr("Night Temperature")
                             description: I18n.tr("Color temperature for night mode")
                             currentValue: SessionData.nightModeTemperature + "K"
                             options: {
@@ -165,6 +165,30 @@ Item {
                             onValueChanged: value => {
                                                 var temp = parseInt(value.replace("K", ""))
                                                 SessionData.setNightModeTemperature(temp)
+                                                if (SessionData.nightModeHighTemperature < temp) {
+                                                    SessionData.setNightModeHighTemperature(temp)
+                                                }
+                                            }
+                        }
+
+                        DankDropdown {
+                            width: parent.width - parent.leftPadding - parent.rightPadding
+                            text: I18n.tr("Day Temperature")
+                            description: I18n.tr("Color temperature for day time")
+                            currentValue: SessionData.nightModeHighTemperature + "K"
+                            options: {
+                                var temps = []
+                                var minTemp = SessionData.nightModeTemperature
+                                for (var i = Math.max(2500, minTemp); i <= 10000; i += 500) {
+                                    temps.push(i + "K")
+                                }
+                                return temps
+                            }
+                            onValueChanged: value => {
+                                                var temp = parseInt(value.replace("K", ""))
+                                                if (temp >= SessionData.nightModeTemperature) {
+                                                    SessionData.setNightModeHighTemperature(temp)
+                                                }
                                             }
                         }
                     }
@@ -470,7 +494,7 @@ Item {
                 width: parent.width
                 height: screensInfoSection.implicitHeight + Theme.spacingL * 2
                 radius: Theme.cornerRadius
-                color: Theme.surfaceContainerHigh
+                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                 border.width: 0
 
@@ -534,7 +558,7 @@ Item {
                                 width: parent.width
                                 height: screenRow.implicitHeight + Theme.spacingS * 2
                                 radius: Theme.cornerRadius
-                                color: Theme.surfaceContainerHigh
+                                color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.3)
                                 border.width: 0
 
@@ -612,7 +636,7 @@ Item {
                         width: parent.width
                         height: componentSection.implicitHeight + Theme.spacingL * 2
                         radius: Theme.cornerRadius
-                        color: Theme.surfaceContainerHigh
+                        color: Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
                         border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.2)
                         border.width: 0
 
@@ -697,7 +721,7 @@ Item {
                                         text: I18n.tr("Show on Last Display")
                                         description: I18n.tr("Always show when there's only one connected display")
                                         checked: displaysTab.getShowOnLastDisplay(parent.componentId)
-                                        visible: !displaysTab.getScreenPreferences(parent.componentId).includes("all") && ["dankBar", "dock", "notifications", "osd", "toast"].includes(parent.componentId)
+                                        visible: !displaysTab.getScreenPreferences(parent.componentId).includes("all") && ["dankBar", "dock", "notifications", "osd", "toast", "notepad", "systemTray"].includes(parent.componentId)
                                         onToggled: (checked) => {
                                             displaysTab.setShowOnLastDisplay(parent.componentId, checked);
                                         }

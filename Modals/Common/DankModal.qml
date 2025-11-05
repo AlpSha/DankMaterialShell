@@ -8,7 +8,8 @@ import qs.Services
 PanelWindow {
     id: root
 
-    WlrLayershell.namespace: "quickshell:modal"
+    property string blurNamespace: "dms:modal"
+    WlrLayershell.namespace: blurNamespace
 
     property alias content: contentLoader.sourceComponent
     property alias contentLoader: contentLoader
@@ -17,17 +18,7 @@ PanelWindow {
     property real height: 300
     readonly property real screenWidth: screen ? screen.width : 1920
     readonly property real screenHeight: screen ? screen.height : 1080
-    readonly property real dpr: {
-        if (CompositorService.isNiri && screen) {
-            const niriScale = NiriService.displayScales[screen.name]
-            if (niriScale !== undefined) return niriScale
-        }
-        if (CompositorService.isHyprland && screen) {
-            const hyprlandMonitor = Hyprland.monitors.values.find(m => m.name === screen.name)
-            if (hyprlandMonitor?.scale !== undefined) return hyprlandMonitor.scale
-        }
-        return (screen?.devicePixelRatio) || 1
-    }
+    readonly property real dpr: CompositorService.getScreenScale(screen)
     property bool showBackground: true
     property real backgroundOpacity: 0.5
     property string positioning: "center"
@@ -120,24 +111,24 @@ PanelWindow {
         bottom: true
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.closeOnBackgroundClick && root.shouldBeVisible
+        onClicked: mouse => {
+                       const localPos = mapToItem(contentContainer, mouse.x, mouse.y)
+                       if (localPos.x < 0 || localPos.x > contentContainer.width || localPos.y < 0 || localPos.y > contentContainer.height) {
+                           root.backgroundClicked()
+                       }
+                   }
+    }
+
     Rectangle {
         id: background
 
         anchors.fill: parent
         color: "black"
-        opacity: root.showBackground ? (root.shouldBeVisible ? root.backgroundOpacity : 0) : 0
-        visible: root.showBackground
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: root.closeOnBackgroundClick
-            onClicked: mouse => {
-                           const localPos = mapToItem(contentContainer, mouse.x, mouse.y)
-                           if (localPos.x < 0 || localPos.x > contentContainer.width || localPos.y < 0 || localPos.y > contentContainer.height) {
-                               root.backgroundClicked()
-                           }
-                       }
-        }
+        opacity: root.showBackground && SettingsData.modalDarkenBackground ? (root.shouldBeVisible ? root.backgroundOpacity : 0) : 0
+        visible: root.showBackground && SettingsData.modalDarkenBackground
 
         Behavior on opacity {
             NumberAnimation {
@@ -181,6 +172,8 @@ PanelWindow {
         clip: false
         layer.enabled: true
         layer.smooth: true
+        layer.textureSize: Qt.size(width * Math.max(2, root.screen?.devicePixelRatio || 1), height * Math.max(2, root.screen?.devicePixelRatio || 1))
+        layer.samples: 4
         opacity: root.shouldBeVisible ? 1 : 0
         transform: [scaleTransform, motionTransform]
 

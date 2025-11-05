@@ -1,7 +1,7 @@
 # Spec for DMS - uses rpkg macros for git builds
 
 %global debug_package %{nil}
-%global version {{{ git_dir_version }}}
+%global version {{{ git_repo_version }}}
 %global pkg_summary DankMaterialShell - Material 3 inspired shell for Wayland compositors
 
 Name:           dms
@@ -12,8 +12,8 @@ Summary:        %{pkg_summary}
 
 License:        GPL-3.0-only
 URL:            https://github.com/AvengeMedia/DankMaterialShell
-VCS:            {{{ git_dir_vcs }}}
-Source0:        {{{ git_dir_pack }}}
+VCS:            {{{ git_repo_vcs }}}
+Source0:        {{{ git_repo_pack }}}
 
 # DMS CLI from danklinux latest commit
 Source1:        https://github.com/AvengeMedia/danklinux/archive/refs/heads/master.tar.gz
@@ -24,6 +24,7 @@ BuildRequires:  gzip
 BuildRequires:  golang >= 1.24
 BuildRequires:  make
 BuildRequires:  wget
+BuildRequires:  systemd-rpm-macros
 
 # Core requirements
 Requires:       (quickshell-git or quickshell)
@@ -32,9 +33,9 @@ Requires:       dms-cli
 Requires:       dgop
 
 # Core utilities (Highly recommended for DMS functionality)
-Recommends:     brightnessctl
 Recommends:     cava
 Recommends:     cliphist
+Recommends:     danksearch
 Recommends:     hyprpicker
 Recommends:     matugen
 Recommends:     quickshell-git
@@ -47,7 +48,7 @@ Suggests:       qt6ct
 
 %description
 DankMaterialShell (DMS) is a modern Wayland desktop shell built with Quickshell
-and optimized for the niri and hyprland compositors. Features notifications,
+and optimized for the niri, hyprland, sway, and dwl (MangoWC) compositors. Features notifications,
 app launcher, wallpaper customization, and fully customizable with plugins.
 
 Includes auto-theming for GTK/Qt apps with matugen, 20+ customizable widgets,
@@ -75,7 +76,7 @@ network statistics. Designed for integration with DankMaterialShell but can be
 used standalone. This package always includes the latest stable dgop release.
 
 %prep
-{{{ git_dir_setup_macro }}}
+{{{ git_repo_setup_macro }}}
 
 # Extract DankLinux source
 tar -xzf %{SOURCE1} -C %{_builddir}
@@ -126,6 +127,9 @@ install -Dm755 %{_builddir}/danklinux-master/bin/${DMS_BINARY} %{buildroot}%{_bi
 # Install dgop binary
 install -Dm755 %{_builddir}/dgop %{buildroot}%{_bindir}/dgop
 
+# Install systemd user service
+install -Dm644 assets/systemd/dms.service %{buildroot}%{_userunitdir}/dms.service
+
 # Install shell files to shared data location
 install -dm755 %{buildroot}%{_datadir}/quickshell/dms
 cp -r * %{buildroot}%{_datadir}/quickshell/dms/
@@ -147,40 +151,14 @@ fi
 
 # Restart DMS for active users after upgrade
 if [ "$1" -ge 2 ]; then
-    # Find all quickshell DMS processes (PID and username)
-    while read pid cmd; do
-        username=$(ps -o user= -p "$pid" 2>/dev/null)
-        
-        [ "$username" = "root" ] && continue
-        [ -z "$username" ] && continue
-        
-        # Get user's UID and validate session
-        user_uid=$(id -u "$username" 2>/dev/null)
-        [ -z "$user_uid" ] && continue
-        [ ! -d "/run/user/$user_uid" ] && continue
-        
-        wayland_display=$(tr '\0' '\n' < /proc/$pid/environ 2>/dev/null | grep '^WAYLAND_DISPLAY=' | cut -d= -f2)
-        [ -z "$wayland_display" ] && continue
-        
-        echo "Restarting DMS for user: $username"
-        
-        # Run as user with full Wayland session environment
-        runuser -u "$username" -- /bin/sh -c "
-            export XDG_RUNTIME_DIR=/run/user/$user_uid
-            export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$user_uid/bus
-            export WAYLAND_DISPLAY=$wayland_display
-            export PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:\$PATH
-            dms restart >/dev/null 2>&1
-        " 2>/dev/null || true
-        
-        break
-    done < <(pgrep -a -f 'quickshell.*dms' 2>/dev/null)
+  pkill -HUP -x dms >/dev/null 2>&1 || true
 fi
 
 %files
 %license LICENSE
 %doc README.md CONTRIBUTING.md
 %{_datadir}/quickshell/dms/
+%{_userunitdir}/dms.service
 
 %files -n dms-cli
 %{_bindir}/dms
@@ -189,4 +167,4 @@ fi
 %{_bindir}/dgop
 
 %changelog
-{{{ git_dir_changelog }}}
+{{{ git_repo_changelog }}}

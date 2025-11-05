@@ -322,6 +322,27 @@
     "comment": ""
   },
   {
+    "term": "Authenticate",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Authentication Required",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Authentication failed, please try again",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Authorize",
     "translation": "",
     "context": "",
@@ -372,6 +393,20 @@
   },
   {
     "term": "Auto-saving...",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Autoconnect disabled",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Autoconnect enabled",
     "translation": "",
     "context": "",
     "reference": "",
@@ -784,6 +819,13 @@
     "comment": ""
   },
   {
+    "term": "Color temperature for day time",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Color temperature for night mode",
     "translation": "",
     "context": "",
@@ -848,6 +890,13 @@
   },
   {
     "term": "Compact Mode",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Compositor",
     "translation": "",
     "context": "",
     "reference": "",
@@ -932,6 +981,27 @@
   },
   {
     "term": "Control currently playing media",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Controls opacity of all popouts, modals, and their content layers (DankDash, Settings, App Drawer, Control Center, etc.)",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Controls opacity of individual widgets inside DankBar",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Controls opacity of the DankBar panel background",
     "translation": "",
     "context": "",
     "reference": "",
@@ -1099,6 +1169,13 @@
     "comment": ""
   },
   {
+    "term": "Dank",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Dank Bar",
     "translation": "",
     "context": "",
@@ -1127,7 +1204,35 @@
     "comment": ""
   },
   {
+    "term": "DankSearch not available",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Dark Mode",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Darken Modal Background",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Date Format",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Day Temperature",
     "translation": "",
     "context": "",
     "reference": "",
@@ -1184,6 +1289,13 @@
   },
   {
     "term": "Device paired",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Disable Autoconnect",
     "translation": "",
     "context": "",
     "reference": "",
@@ -1365,6 +1477,13 @@
     "comment": ""
   },
   {
+    "term": "Enable Autoconnect",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Enable GPU Temperature",
     "translation": "",
     "context": "",
@@ -1436,6 +1555,13 @@
   },
   {
     "term": "Enter PIN for ",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Enter a search query",
     "translation": "",
     "context": "",
     "reference": "",
@@ -1576,6 +1702,13 @@
   },
   {
     "term": "Failed to start connection to ",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Failed to update autoconnect",
     "translation": "",
     "context": "",
     "reference": "",
@@ -1807,13 +1940,6 @@
   },
   {
     "term": "Hibernate",
-    "translation": "",
-    "context": "",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Hibernate system after",
     "translation": "",
     "context": "",
     "reference": "",
@@ -2212,6 +2338,13 @@
     "comment": ""
   },
   {
+    "term": "Matugen Target Monitor",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Max apps to show",
     "translation": "",
     "context": "",
@@ -2289,14 +2422,14 @@
     "comment": ""
   },
   {
-    "term": "Monitor",
+    "term": "Monitor Selection:",
     "translation": "",
     "context": "",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Monitor Selection:",
+    "term": "Monitor whose wallpaper drives dynamic theming colors",
     "translation": "",
     "context": "",
     "reference": "",
@@ -2422,6 +2555,13 @@
     "comment": ""
   },
   {
+    "term": "Night Temperature",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "No Active Players",
     "translation": "",
     "context": "",
@@ -2465,6 +2605,13 @@
   },
   {
     "term": "No clipboard entries found",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "No files found",
     "translation": "",
     "context": "",
     "reference": "",
@@ -3129,7 +3276,14 @@
     "comment": ""
   },
   {
-    "term": "Scroll through windows, rather than workspaces",
+    "term": "Search file contents",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search filenames",
     "translation": "",
     "context": "",
     "reference": "",
@@ -3151,6 +3305,13 @@
   },
   {
     "term": "Search...",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Searching...",
     "translation": "",
     "context": "",
     "reference": "",
@@ -3283,6 +3444,13 @@
     "comment": ""
   },
   {
+    "term": "Show All Tags",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Show Confirmation on Power Actions",
     "translation": "",
     "context": "",
@@ -3312,6 +3480,20 @@
   },
   {
     "term": "Show Workspace Apps",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show all 9 tags instead of only occupied tags (DWL only)",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show darkened overlay behind modal dialogs",
     "translation": "",
     "context": "",
     "reference": "",
@@ -3514,6 +3696,13 @@
     "comment": ""
   },
   {
+    "term": "Suspend behavior",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Suspend system after",
     "translation": "",
     "context": "",
@@ -3648,13 +3837,6 @@
   },
   {
     "term": "Tab/Shift+Tab: Nav • ←→↑↓: Grid Nav • Enter/Space: Select",
-    "translation": "",
-    "context": "",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Temperature",
     "translation": "",
     "context": "",
     "reference": "",
@@ -4060,6 +4242,13 @@
     "comment": ""
   },
   {
+    "term": "Wallpaper Monitor",
+    "translation": "",
+    "context": "",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Wallpapers",
     "translation": "",
     "context": "",
@@ -4145,13 +4334,6 @@
   },
   {
     "term": "Wind",
-    "translation": "",
-    "context": "",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Window Scrolling",
     "translation": "",
     "context": "",
     "reference": "",

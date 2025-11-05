@@ -289,10 +289,10 @@ Item {
                         IconImage {
                             id: iconImg
                             anchors.left: parent.left
-                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - 18) / 2 : Theme.spacingXS
+                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - Theme.barIconSize(root.barThickness)) / 2 : Theme.spacingXS
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 18
-                            height: 18
+                            width: Theme.barIconSize(root.barThickness)
+                            height: Theme.barIconSize(root.barThickness)
                             source: {
                                 root._desktopEntriesUpdateTrigger
                                 const moddedId = Paths.moddedAppId(appId)
@@ -309,9 +309,9 @@ Item {
 
                         DankIcon {
                             anchors.left: parent.left
-                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - 18) / 2 : Theme.spacingXS
+                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - Theme.barIconSize(root.barThickness)) / 2 : Theme.spacingXS
                             anchors.verticalCenter: parent.verticalCenter
-                            size: 18
+                            size: Theme.barIconSize(root.barThickness)
                             name: "sports_esports"
                             color: Theme.surfaceText
                             visible: {
@@ -517,10 +517,10 @@ Item {
                         IconImage {
                             id: iconImg
                             anchors.left: parent.left
-                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - 18) / 2 : Theme.spacingXS
+                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - Theme.barIconSize(root.barThickness)) / 2 : Theme.spacingXS
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 18
-                            height: 18
+                            width: Theme.barIconSize(root.barThickness)
+                            height: Theme.barIconSize(root.barThickness)
                             source: {
                                 root._desktopEntriesUpdateTrigger
                                 const moddedId = Paths.moddedAppId(appId)
@@ -537,9 +537,9 @@ Item {
 
                         DankIcon {
                             anchors.left: parent.left
-                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - 18) / 2 : Theme.spacingXS
+                            anchors.leftMargin: SettingsData.runningAppsCompactMode ? (parent.width - Theme.barIconSize(root.barThickness)) / 2 : Theme.spacingXS
                             anchors.verticalCenter: parent.verticalCenter
-                            size: 18
+                            size: Theme.barIconSize(root.barThickness)
                             name: "sports_esports"
                             color: Theme.surfaceText
                             visible: {
@@ -772,7 +772,7 @@ Item {
                 }
                 width: 100
                 height: 32
-                color: Theme.popupBackground()
+                color: Theme.withAlpha(Theme.surfaceContainer, Theme.popupTransparency)
                 radius: Theme.cornerRadius
                 border.width: 1
                 border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.12)

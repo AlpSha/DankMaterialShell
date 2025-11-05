@@ -4,6 +4,7 @@ import QtQuick.Effects
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.I3
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Services.Notifications
@@ -31,6 +32,9 @@ Item {
             focusedScreenName = Hyprland.focusedWorkspace.monitor.name
         } else if (CompositorService.isNiri && NiriService.currentOutput) {
             focusedScreenName = NiriService.currentOutput
+        } else if (CompositorService.isSway) {
+            const focusedWs = I3.workspaces?.values?.find(ws => ws.focused === true)
+            focusedScreenName = focusedWs?.monitor?.name || ""
         }
 
         if (!focusedScreenName && barVariants.instances.length > 0) {
@@ -55,6 +59,9 @@ Item {
             focusedScreenName = Hyprland.focusedWorkspace.monitor.name
         } else if (CompositorService.isNiri && NiriService.currentOutput) {
             focusedScreenName = NiriService.currentOutput
+        } else if (CompositorService.isSway) {
+            const focusedWs = I3.workspaces?.values?.find(ws => ws.focused === true)
+            focusedScreenName = focusedWs?.monitor?.name || ""
         }
 
         if (!focusedScreenName && barVariants.instances.length > 0) {
@@ -110,9 +117,9 @@ Item {
                     return
                 }
 
-                if (clockButtonRef && dankDashPopoutLoader.item.setTriggerPosition) {
-                    const globalPos = clockButtonRef.mapToGlobal(0, 0)
-                    const pos = SettingsData.getPopupTriggerPosition(globalPos, barWindow.screen, barWindow.effectiveBarThickness, clockButtonRef.width)
+                if (clockButtonRef && clockButtonRef.visualContent && dankDashPopoutLoader.item.setTriggerPosition) {
+                    const globalPos = clockButtonRef.visualContent.mapToGlobal(0, 0)
+                    const pos = SettingsData.getPopupTriggerPosition(globalPos, barWindow.screen, barWindow.effectiveBarThickness, clockButtonRef.visualWidth)
                     const section = clockButtonRef.section || "center"
                     dankDashPopoutLoader.item.setTriggerPosition(pos.x, pos.y, pos.width, section, barWindow.screen)
                 } else {
@@ -173,19 +180,7 @@ Item {
             readonly property color _surfaceContainer: Theme.surfaceContainer
             readonly property real _backgroundAlpha: topBarCore?.backgroundTransparency ?? SettingsData.dankBarTransparency
             readonly property color _bgColor: Theme.withAlpha(_surfaceContainer, _backgroundAlpha)
-            readonly property real _dpr: {
-                if (CompositorService.isNiri && barWindow.screen) {
-                    const niriScale = NiriService.displayScales[barWindow.screen.name]
-                    if (niriScale !== undefined)
-                        return niriScale
-                }
-                if (CompositorService.isHyprland && barWindow.screen) {
-                    const hyprlandMonitor = Hyprland.monitors.values.find(m => m.name === barWindow.screen.name)
-                    if (hyprlandMonitor?.scale !== undefined)
-                        return hyprlandMonitor.scale
-                }
-                return (barWindow.screen?.devicePixelRatio) || 1
-            }
+            readonly property real _dpr: CompositorService.getScreenScale(barWindow.screen)
 
             property string screenName: modelData.name
             readonly property int notificationCount: NotificationService.notifications.length
@@ -536,6 +531,61 @@ Item {
                                 axis: axis
                             }
 
+                            MouseArea {
+                                id: scrollArea
+                                anchors.fill: parent
+                                acceptedButtons: Qt.NoButton
+                                propagateComposedEvents: true
+                                z: -1
+
+                                property real scrollAccumulator: 0
+                                property real touchpadThreshold: 500
+                                property bool actionInProgress: false
+
+                                Timer {
+                                    id: cooldownTimer
+                                    interval: 100
+                                    onTriggered: parent.actionInProgress = false
+                                }
+
+                                onWheel: wheel => {
+                                    if (actionInProgress) {
+                                        wheel.accepted = false
+                                        return
+                                    }
+
+                                    const deltaY = wheel.angleDelta.y
+                                    const deltaX = wheel.angleDelta.x
+
+                                    if (CompositorService.isNiri && Math.abs(deltaX) > Math.abs(deltaY)) {
+                                        topBarContent.switchApp(deltaX)
+                                        wheel.accepted = false
+                                        return
+                                    }
+
+                                    const isMouseWheel = Math.abs(deltaY) >= 120 && (Math.abs(deltaY) % 120) === 0
+                                    const direction = deltaY < 0 ? 1 : -1
+
+                                    if (isMouseWheel) {
+                                        topBarContent.switchWorkspace(direction)
+                                        actionInProgress = true
+                                        cooldownTimer.restart()
+                                    } else {
+                                        scrollAccumulator += deltaY
+
+                                        if (Math.abs(scrollAccumulator) >= touchpadThreshold) {
+                                            const touchDirection = scrollAccumulator < 0 ? 1 : -1
+                                            topBarContent.switchWorkspace(touchDirection)
+                                            scrollAccumulator = 0
+                                            actionInProgress = true
+                                            cooldownTimer.restart()
+                                        }
+                                    }
+
+                                    wheel.accepted = false
+                                }
+                            }
+
                             Item {
                                 id: topBarContent
                                 anchors.fill: parent
@@ -549,6 +599,163 @@ Item {
 
                                 function updateComponentMap() {
                                     componentMapRevision++
+                                }
+
+                                readonly property var sortedToplevels: {
+                                    return CompositorService.filterCurrentWorkspace(CompositorService.sortedToplevels, barWindow.screenName);
+                                }
+
+                                function getRealWorkspaces() {
+                                    if (CompositorService.isNiri) {
+                                        if (!barWindow.screenName || !SettingsData.workspacesPerMonitor) {
+                                            return NiriService.getCurrentOutputWorkspaceNumbers()
+                                        }
+                                        const workspaces = NiriService.allWorkspaces.filter(ws => ws.output === barWindow.screenName).map(ws => ws.idx + 1)
+                                        return workspaces.length > 0 ? workspaces : [1, 2]
+                                    } else if (CompositorService.isHyprland) {
+                                        const workspaces = Hyprland.workspaces?.values || []
+
+                                        if (!barWindow.screenName || !SettingsData.workspacesPerMonitor) {
+                                            const sorted = workspaces.slice().sort((a, b) => a.id - b.id)
+                                            const filtered = sorted.filter(ws => ws.id > -1)
+                                            return filtered.length > 0 ? filtered : [{"id": 1, "name": "1"}]
+                                        }
+
+                                        const monitorWorkspaces = workspaces.filter(ws => {
+                                            return ws.lastIpcObject && ws.lastIpcObject.monitor === barWindow.screenName && ws.id > -1
+                                        })
+
+                                        if (monitorWorkspaces.length === 0) {
+                                            return [{"id": 1, "name": "1"}]
+                                        }
+
+                                        return monitorWorkspaces.sort((a, b) => a.id - b.id)
+                                    } else if (CompositorService.isDwl) {
+                                        if (!DwlService.dwlAvailable) {
+                                            return [0]
+                                        }
+                                        if (SettingsData.dwlShowAllTags) {
+                                            return Array.from({length: DwlService.tagCount}, (_, i) => i)
+                                        }
+                                        return DwlService.getVisibleTags(barWindow.screenName)
+                                    } else if (CompositorService.isSway) {
+                                        const workspaces = I3.workspaces?.values || []
+                                        if (workspaces.length === 0) return [{"num": 1}]
+
+                                        if (!barWindow.screenName || !SettingsData.workspacesPerMonitor) {
+                                            return workspaces.slice().sort((a, b) => a.num - b.num)
+                                        }
+
+                                        const monitorWorkspaces = workspaces.filter(ws => ws.monitor?.name === barWindow.screenName)
+                                        return monitorWorkspaces.length > 0 ? monitorWorkspaces.sort((a, b) => a.num - b.num) : [{"num": 1}]
+                                    }
+                                    return [1]
+                                }
+
+                                function getCurrentWorkspace() {
+                                    if (CompositorService.isNiri) {
+                                        if (!barWindow.screenName || !SettingsData.workspacesPerMonitor) {
+                                            return NiriService.getCurrentWorkspaceNumber()
+                                        }
+                                        const activeWs = NiriService.allWorkspaces.find(ws => ws.output === barWindow.screenName && ws.is_active)
+                                        return activeWs ? activeWs.idx + 1 : 1
+                                    } else if (CompositorService.isHyprland) {
+                                        const monitors = Hyprland.monitors?.values || []
+                                        const currentMonitor = monitors.find(monitor => monitor.name === barWindow.screenName)
+                                        return currentMonitor?.activeWorkspace?.id ?? 1
+                                    } else if (CompositorService.isDwl) {
+                                        if (!DwlService.dwlAvailable) return 0
+                                        const outputState = DwlService.getOutputState(barWindow.screenName)
+                                        if (!outputState || !outputState.tags) return 0
+                                        const activeTags = DwlService.getActiveTags(barWindow.screenName)
+                                        return activeTags.length > 0 ? activeTags[0] : 0
+                                    } else if (CompositorService.isSway) {
+                                        if (!barWindow.screenName || !SettingsData.workspacesPerMonitor) {
+                                            const focusedWs = I3.workspaces?.values?.find(ws => ws.focused === true)
+                                            return focusedWs ? focusedWs.num : 1
+                                        }
+
+                                        const focusedWs = I3.workspaces?.values?.find(ws => ws.monitor?.name === barWindow.screenName && ws.focused === true)
+                                        return focusedWs ? focusedWs.num : 1
+                                    }
+                                    return 1
+                                }
+
+                                function switchWorkspace(direction) {
+                                    const realWorkspaces = getRealWorkspaces()
+                                    if (realWorkspaces.length < 2) {
+                                        return
+                                    }
+
+                                    if (CompositorService.isNiri) {
+                                        const currentWs = getCurrentWorkspace()
+                                        const currentIndex = realWorkspaces.findIndex(ws => ws === currentWs)
+                                        const validIndex = currentIndex === -1 ? 0 : currentIndex
+                                        const nextIndex = direction > 0 ? Math.min(validIndex + 1, realWorkspaces.length - 1) : Math.max(validIndex - 1, 0)
+
+                                        if (nextIndex !== validIndex) {
+                                            NiriService.switchToWorkspace(realWorkspaces[nextIndex] - 1)
+                                        }
+                                    } else if (CompositorService.isHyprland) {
+                                        const currentWs = getCurrentWorkspace()
+                                        const currentIndex = realWorkspaces.findIndex(ws => ws.id === currentWs)
+                                        const validIndex = currentIndex === -1 ? 0 : currentIndex
+                                        const nextIndex = direction > 0 ? Math.min(validIndex + 1, realWorkspaces.length - 1) : Math.max(validIndex - 1, 0)
+
+                                        if (nextIndex !== validIndex) {
+                                            Hyprland.dispatch(`workspace ${realWorkspaces[nextIndex].id}`)
+                                        }
+                                    } else if (CompositorService.isDwl) {
+                                        const currentTag = getCurrentWorkspace()
+                                        const currentIndex = realWorkspaces.findIndex(tag => tag === currentTag)
+                                        const validIndex = currentIndex === -1 ? 0 : currentIndex
+                                        const nextIndex = direction > 0 ? Math.min(validIndex + 1, realWorkspaces.length - 1) : Math.max(validIndex - 1, 0)
+
+                                        if (nextIndex !== validIndex) {
+                                            DwlService.switchToTag(barWindow.screenName, realWorkspaces[nextIndex])
+                                        }
+                                    } else if (CompositorService.isSway) {
+                                        const currentWs = getCurrentWorkspace()
+                                        const currentIndex = realWorkspaces.findIndex(ws => ws.num === currentWs)
+                                        const validIndex = currentIndex === -1 ? 0 : currentIndex
+                                        const nextIndex = direction > 0 ? Math.min(validIndex + 1, realWorkspaces.length - 1) : Math.max(validIndex - 1, 0)
+
+                                        if (nextIndex !== validIndex) {
+                                            try { I3.dispatch(`workspace number ${realWorkspaces[nextIndex].num}`) } catch(_){}
+                                        }
+                                    }
+                                }
+
+                                function switchApp(deltaY) {
+                                    const windows = sortedToplevels;
+                                    if (windows.length < 2) {
+                                        return;
+                                    }
+                                    let currentIndex = -1;
+                                    for (let i = 0; i < windows.length; i++) {
+                                        if (windows[i].activated) {
+                                            currentIndex = i;
+                                            break;
+                                        }
+                                    }
+                                    let nextIndex;
+                                    if (deltaY < 0) {
+                                        if (currentIndex === -1) {
+                                            nextIndex = 0;
+                                        } else {
+                                            nextIndex = currentIndex + 1;
+                                        }
+                                    } else {
+                                        if (currentIndex === -1) {
+                                            nextIndex = windows.length - 1;
+                                        } else {
+                                            nextIndex = currentIndex - 1;
+                                        }
+                                    }
+                                    const nextWindow = windows[nextIndex];
+                                    if (nextWindow) {
+                                        nextWindow.activate();
+                                    }
                                 }
 
                                 readonly property int availableWidth: width

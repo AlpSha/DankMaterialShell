@@ -137,6 +137,15 @@
   "Audio Output Devices (": {
     "Audio Output Devices (": "オーディオ出力デバイス（"
   },
+  "Authenticate": {
+    "Authenticate": "認証"
+  },
+  "Authentication Required": {
+    "Authentication Required": "認証が必要です"
+  },
+  "Authentication failed, please try again": {
+    "Authentication failed, please try again": "認証が失敗しました、もう一度試してください"
+  },
   "Authorize": {
     "Authorize": "許可"
   },
@@ -163,6 +172,12 @@
   },
   "Auto-saving...": {
     "Auto-saving...": "自動保存中..."
+  },
+  "Autoconnect disabled": {
+    "Autoconnect disabled": "自動接続が無効"
+  },
+  "Autoconnect enabled": {
+    "Autoconnect enabled": "自動接続が有効"
   },
   "Automatic Control": {
     "Automatic Control": "自動制御"
@@ -338,6 +353,9 @@
   "Color Picker": {
     "Color Picker": "カラーピッカー"
   },
+  "Color temperature for day time": {
+    "Color temperature for day time": "昼間の色温度"
+  },
   "Color temperature for night mode": {
     "Color temperature for night mode": "ナイトモードの色温度"
   },
@@ -367,6 +385,9 @@
   },
   "Compact Mode": {
     "Compact Mode": "コンパクトモード"
+  },
+  "Compositor": {
+    "Compositor": "コンポジター"
   },
   "Compositor:": {
     "Compositor:": "コンポジター："
@@ -409,6 +430,15 @@
   },
   "Control currently playing media": {
     "Control currently playing media": "現在再生中のメディアを制御"
+  },
+  "Controls opacity of all popouts, modals, and their content layers (DankDash, Settings, App Drawer, Control Center, etc.)": {
+    "Controls opacity of all popouts, modals, and their content layers (DankDash, Settings, App Drawer, Control Center, etc.)": "すべてのポップアウト、モーダル、およびそれらのコンテンツレイヤー(DankDash、設定、アプリドロワー、コントロールセンターなど)の不透明度を制御"
+  },
+  "Controls opacity of individual widgets inside DankBar": {
+    "Controls opacity of individual widgets inside DankBar": "DankBar内の個々のウィジェットの不透明度を制御"
+  },
+  "Controls opacity of the DankBar panel background": {
+    "Controls opacity of the DankBar panel background": "DankBarパネルの背景の不透明度を制御"
   },
   "Copied to clipboard": {
     "Copied to clipboard": "クリップボードにコピーしました"
@@ -479,6 +509,9 @@
   "Daily at:": {
     "Daily at:": "毎日："
   },
+  "Dank": {
+    "Dank": "Dank"
+  },
   "Dank Bar": {
     "Dank Bar": "Dank Bar"
   },
@@ -494,8 +527,20 @@
   "DankBar Font Scale": {
     "DankBar Font Scale": "Dank Bar フォントスケール"
   },
+  "DankSearch not available": {
+    "DankSearch not available": "DankSearchが利用できません"
+  },
+  "Dark Mode": {
+    "Dark Mode": "ダークモード"
+  },
+  "Darken Modal Background": {
+    "Darken Modal Background": "モーダル背景を暗くする"
+  },
   "Date Format": {
     "Date Format": "日付形式"
+  },
+  "Day Temperature": {
+    "Day Temperature": "昼間の温度"
   },
   "Default": {
     "Default": "デフォルト"
@@ -520,6 +565,9 @@
   },
   "Device paired": {
     "Device paired": "デバイスがペアリングされました"
+  },
+  "Disable Autoconnect": {
+    "Disable Autoconnect": "自動接続を無効"
   },
   "Disconnect": {
     "Disconnect": "切断"
@@ -596,6 +644,9 @@
   "Empty": {
     "Empty": "空白"
   },
+  "Enable Autoconnect": {
+    "Enable Autoconnect": "自動接続を有効"
+  },
   "Enable GPU Temperature": {
     "Enable GPU Temperature": "GPU温度を有効にする"
   },
@@ -628,6 +679,9 @@
   },
   "Enter PIN for ": {
     "Enter PIN for ": "PINを入力してください "
+  },
+  "Enter a search query": {
+    "Enter a search query": "検索クエリを入力してください"
   },
   "Enter credentials for ": {
     "Enter credentials for ": "資格情報を入力"
@@ -688,6 +742,9 @@
   },
   "Failed to start connection to ": {
     "Failed to start connection to ": "接続ができませんでした "
+  },
+  "Failed to update autoconnect": {
+    "Failed to update autoconnect": "自動接続の更新が失敗しました"
   },
   "Feels Like": {
     "Feels Like": "どうやら"
@@ -968,6 +1025,9 @@
   "Matugen Settings": {
     "Matugen Settings": "Matugen設定"
   },
+  "Matugen Target Monitor": {
+    "Matugen Target Monitor": "Matugenターゲットモニター"
+  },
   "Max apps to show": {
     "Max apps to show": "表示するアプリの最大数"
   },
@@ -1006,6 +1066,9 @@
   },
   "Monitor Selection:": {
     "Monitor Selection:": "モニターの選択："
+  },
+  "Monitor whose wallpaper drives dynamic theming colors": {
+    "Monitor whose wallpaper drives dynamic theming colors": "ダイナミックテーマの色を駆動する壁紙をモニター"
   },
   "Monospace Font": {
     "Monospace Font": "等幅フォント"
@@ -1058,6 +1121,9 @@
   "Night Mode": {
     "Night Mode": "ナイトモード"
   },
+  "Night Temperature": {
+    "Night Temperature": "夜間の温度"
+  },
   "No Active Players": {
     "No Active Players": "アクティブプレイヤーなし"
   },
@@ -1078,6 +1144,9 @@
   },
   "No clipboard entries found": {
     "No clipboard entries found": "クリップボードのエントリが見つかりませんでした"
+  },
+  "No files found": {
+    "No files found": "ファイルが見つかりませんでした"
   },
   "No items added yet": {
     "No items added yet": "まだアイテムが追加されていません"
@@ -1367,6 +1436,12 @@
   "Scroll through windows, rather than workspaces": {
     "Scroll through windows, rather than workspaces": "ワークスペースではなくウィンドウをスクロール"
   },
+  "Search file contents": {
+    "Search file contents": "ファイルの内容を検索"
+  },
+  "Search filenames": {
+    "Search filenames": "ファイル名の検索"
+  },
   "Search for a location...": {
     "Search for a location...": "ロケーションを検索..."
   },
@@ -1375,6 +1450,9 @@
   },
   "Search...": {
     "Search...": "検索..."
+  },
+  "Searching...": {
+    "Searching...": "検索中..."
   },
   "Select Launcher Logo": {
     "Select Launcher Logo": "ランチャーロゴを選ぶ"
@@ -1430,6 +1508,9 @@
   "Shift+Del: Clear All • Esc: Close": {
     "Shift+Del: Clear All • Esc: Close": "Shift+Del: すべてクリア • Esc: 閉じる"
   },
+  "Show All Tags": {
+    "Show All Tags": "すべてのタグを表示"
+  },
   "Show Confirmation on Power Actions": {
     "Show Confirmation on Power Actions": "電源アクションの確認を表示"
   },
@@ -1444,6 +1525,12 @@
   },
   "Show Workspace Apps": {
     "Show Workspace Apps": "ワークスペースアプリを表示"
+  },
+  "Show all 9 tags instead of only occupied tags (DWL only)": {
+    "Show all 9 tags instead of only occupied tags (DWL only)": "占有タグのみではなく、9 つのタグをすべて表示 (DWL のみ)"
+  },
+  "Show darkened overlay behind modal dialogs": {
+    "Show darkened overlay behind modal dialogs": "モーダルダイアログの背後に暗いオーバーレイを表示"
   },
   "Show on Last Display": {
     "Show on Last Display": "最後のディスプレイに表示"
@@ -1528,6 +1615,9 @@
   },
   "Suspend": {
     "Suspend": "一時停止"
+  },
+  "Suspend behavior": {
+    "Suspend behavior": ""
   },
   "Suspend system after": {
     "Suspend system after": "後にシステムを一時停止"
@@ -1768,6 +1858,9 @@
   },
   "Wallpaper": {
     "Wallpaper": "壁紙"
+  },
+  "Wallpaper Monitor": {
+    "Wallpaper Monitor": "壁紙モニター"
   },
   "Wallpapers": {
     "Wallpapers": "壁紙"

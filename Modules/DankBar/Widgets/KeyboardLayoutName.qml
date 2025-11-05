@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Common
 import qs.Modules.Plugins
@@ -12,7 +13,7 @@ BasePill {
     id: root
 
     property bool compactMode: SettingsData.keyboardLayoutNameCompactMode
-    property string currentLayout: ""
+    property string currentLayout: CompositorService.isNiri ? NiriService.getCurrentKeyboardLayoutName() : ""
     property string hyprlandKeyboard: ""
 
     content: Component {
@@ -78,29 +79,29 @@ BasePill {
                     root.hyprlandKeyboard,
                     "next"
                 ])
+            }
+        }
+    }
+
+    Connections {
+        target: CompositorService.isHyprland ? Hyprland : null
+        enabled: CompositorService.isHyprland
+
+        function onRawEvent(event) {
+            if (event.name === "activelayout") {
                 updateLayout()
             }
         }
     }
 
-    Timer {
-        id: updateTimer
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
+    Component.onCompleted: {
+        if (CompositorService.isHyprland) {
             updateLayout()
         }
     }
 
-    Component.onCompleted: {
-        updateLayout()
-    }
-
     function updateLayout() {
-        if (CompositorService.isNiri) {
-            root.currentLayout = NiriService.getCurrentKeyboardLayoutName()
-        } else if (CompositorService.isHyprland) {
+        if (CompositorService.isHyprland) {
             Proc.runCommand(null, ["hyprctl", "-j", "devices"], (output, exitCode) => {
                 if (exitCode !== 0) {
                     root.currentLayout = "Unknown"

@@ -2,6 +2,7 @@ pragma Singleton
 
 pragma ComponentBehavior: Bound
 
+import QtCore
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -26,6 +27,9 @@ Singleton {
     property var powerUnplugSound: null
     property var normalNotificationSound: null
     property var criticalNotificationSound: null
+
+    property var mediaDevices: null
+    property var mediaDevicesConnections: null
 
     signal micMuteChanged
 
@@ -68,8 +72,8 @@ Singleton {
     function scanSoundThemes() {
         const xdgDataDirs = Quickshell.env("XDG_DATA_DIRS")
         const searchPaths = xdgDataDirs && xdgDataDirs.trim() !== ""
-            ? xdgDataDirs.split(":")
-            : ["/usr/share", "/usr/local/share", StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share"]
+            ? xdgDataDirs.split(":").concat(Paths.strip(StandardPaths.writableLocation(StandardPaths.GenericDataLocation)))
+            : ["/usr/share", "/usr/local/share", Paths.strip(StandardPaths.writableLocation(StandardPaths.GenericDataLocation))]
 
         const basePaths = searchPaths.map(p => p + "/sounds").join(" ")
         const script = `
@@ -134,8 +138,8 @@ Singleton {
 
         const xdgDataDirs = Quickshell.env("XDG_DATA_DIRS")
         const searchPaths = xdgDataDirs && xdgDataDirs.trim() !== ""
-            ? xdgDataDirs.split(":")
-            : ["/usr/share", "/usr/local/share", StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share"]
+            ? xdgDataDirs.split(":").concat(Paths.strip(StandardPaths.writableLocation(StandardPaths.GenericDataLocation)))
+            : ["/usr/share", "/usr/local/share", Paths.strip(StandardPaths.writableLocation(StandardPaths.GenericDataLocation))]
 
         const extensions = ["oga", "ogg", "wav", "mp3", "flac"]
         const themesToSearch = themeName !== "freedesktop" ? `${themeName} freedesktop` : themeName
@@ -240,6 +244,42 @@ Singleton {
         }
     }
 
+    function setupMediaDevices() {
+        if (!soundsAvailable || mediaDevices) {
+            return
+        }
+
+        try {
+            mediaDevices = Qt.createQmlObject(`
+                import QtQuick
+                import QtMultimedia
+                MediaDevices {
+                    id: devices
+                    Component.onCompleted: {
+                        console.log("AudioService: MediaDevices initialized, default output:", defaultAudioOutput?.description)
+                    }
+                }
+            `, root, "AudioService.MediaDevices")
+
+            if (mediaDevices) {
+                mediaDevicesConnections = Qt.createQmlObject(`
+                    import QtQuick
+                    Connections {
+                        target: root.mediaDevices
+                        function onDefaultAudioOutputChanged() {
+                            console.log("AudioService: Default audio output changed, recreating sound players")
+                            root.destroySoundPlayers()
+                            root.createSoundPlayers()
+                        }
+                    }
+                `, root, "AudioService.MediaDevicesConnections")
+            }
+        } catch (e) {
+            console.log("AudioService: MediaDevices not available, using default audio output")
+            mediaDevices = null
+        }
+    }
+
     function destroySoundPlayers() {
         if (volumeChangeSound) {
             volumeChangeSound.destroy()
@@ -268,14 +308,20 @@ Singleton {
             return
         }
 
+        setupMediaDevices()
+
         try {
+            const deviceProperty = mediaDevices ? `device: root.mediaDevices.defaultAudioOutput\n                    ` : ""
+
             const volumeChangePath = getSoundPath("audio-volume-change")
             volumeChangeSound = Qt.createQmlObject(`
                 import QtQuick
                 import QtMultimedia
                 MediaPlayer {
                     source: "${volumeChangePath}"
-                    audioOutput: AudioOutput { volume: 1.0 }
+                    audioOutput: AudioOutput {
+                        ${deviceProperty}volume: 1.0
+                    }
                 }
             `, root, "AudioService.VolumeChangeSound")
 
@@ -285,7 +331,9 @@ Singleton {
                 import QtMultimedia
                 MediaPlayer {
                     source: "${powerPlugPath}"
-                    audioOutput: AudioOutput { volume: 1.0 }
+                    audioOutput: AudioOutput {
+                        ${deviceProperty}volume: 1.0
+                    }
                 }
             `, root, "AudioService.PowerPlugSound")
 
@@ -295,7 +343,9 @@ Singleton {
                 import QtMultimedia
                 MediaPlayer {
                     source: "${powerUnplugPath}"
-                    audioOutput: AudioOutput { volume: 1.0 }
+                    audioOutput: AudioOutput {
+                        ${deviceProperty}volume: 1.0
+                    }
                 }
             `, root, "AudioService.PowerUnplugSound")
 
@@ -305,7 +355,9 @@ Singleton {
                 import QtMultimedia
                 MediaPlayer {
                     source: "${messagePath}"
-                    audioOutput: AudioOutput { volume: 1.0 }
+                    audioOutput: AudioOutput {
+                        ${deviceProperty}volume: 1.0
+                    }
                 }
             `, root, "AudioService.NormalNotificationSound")
 
@@ -315,7 +367,9 @@ Singleton {
                 import QtMultimedia
                 MediaPlayer {
                     source: "${messageNewInstantPath}"
-                    audioOutput: AudioOutput { volume: 1.0 }
+                    audioOutput: AudioOutput {
+                        ${deviceProperty}volume: 1.0
+                    }
                 }
             `, root, "AudioService.CriticalNotificationSound")
         } catch (e) {

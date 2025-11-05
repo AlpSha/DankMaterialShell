@@ -116,13 +116,29 @@ Item {
                         color: trayItemArea.containsMouse ? Theme.primaryHover : "transparent"
 
                         IconImage {
+                            id: iconImg
                             anchors.centerIn: parent
-                            width: 16
-                            height: 16
+                            width: Theme.barIconSize(root.barThickness)
+                            height: Theme.barIconSize(root.barThickness)
                             source: delegateRoot.iconSource
                             asynchronous: true
                             smooth: true
                             mipmap: true
+                            visible: status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !iconImg.visible
+                            text: {
+                                const itemId = trayItem?.id || ""
+                                if (!itemId) {
+                                    return "?"
+                                }
+                                return itemId.charAt(0).toUpperCase()
+                            }
+                            font.pixelSize: 10
+                            color: Theme.surfaceText
                         }
                     }
 
@@ -130,6 +146,7 @@ Item {
                         id: trayItemArea
 
                         anchors.fill: parent
+                        hoverEnabled: true
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         cursorShape: Qt.PointingHandCursor
                         onClicked: (mouse) => {
@@ -202,13 +219,29 @@ Item {
                         color: trayItemArea.containsMouse ? Theme.primaryHover : "transparent"
 
                         IconImage {
+                            id: iconImg
                             anchors.centerIn: parent
-                            width: 16
-                            height: 16
+                            width: Theme.barIconSize(root.barThickness)
+                            height: Theme.barIconSize(root.barThickness)
                             source: delegateRoot.iconSource
                             asynchronous: true
                             smooth: true
                             mipmap: true
+                            visible: status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !iconImg.visible
+                            text: {
+                                const itemId = trayItem?.id || ""
+                                if (!itemId) {
+                                    return "?"
+                                }
+                                return itemId.charAt(0).toUpperCase()
+                            }
+                            font.pixelSize: 10
+                            color: Theme.surfaceText
                         }
                     }
 
@@ -216,6 +249,7 @@ Item {
                         id: trayItemArea
 
                         anchors.fill: parent
+                        hoverEnabled: true
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         cursorShape: Qt.PointingHandCursor
                         onClicked: (mouse) => {
@@ -406,7 +440,7 @@ Item {
                         }
                     }
 
-                    color: Theme.popupBackground()
+                    color: Theme.withAlpha(Theme.surfaceContainer, Theme.popupTransparency)
                     radius: Theme.cornerRadius
                     border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.08)
                     border.width: 1

@@ -12,10 +12,13 @@ Singleton {
 
     property bool isHyprland: false
     property bool isNiri: false
+    property bool isDwl: false
+    property bool isSway: false
     property string compositor: "unknown"
 
     readonly property string hyprlandSignature: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
     readonly property string niriSocket: Quickshell.env("NIRI_SOCKET")
+    readonly property string swaySocket: Quickshell.env("SWAYSOCK")
     property bool useNiriSorting: isNiri && NiriService
 
     property var sortedToplevels: sortedToplevelsCache
@@ -26,6 +29,30 @@ Singleton {
     property bool _hasRefreshedOnce: false
 
     property var _coordCache: ({})
+    property int _refreshCount: 0
+    property real _refreshWindowStart: 0
+    readonly property int _maxRefreshesPerSecond: 3
+
+    function getScreenScale(screen) {
+        if (!screen) return 1
+
+        if (isNiri && screen) {
+            const niriScale = NiriService.displayScales[screen.name]
+            if (niriScale !== undefined) return niriScale
+        }
+
+        if (isHyprland && screen) {
+            const hyprlandMonitor = Hyprland.monitors.values.find(m => m.name === screen.name)
+            if (hyprlandMonitor?.scale !== undefined) return hyprlandMonitor.scale
+        }
+
+        if (isDwl && screen) {
+            const dwlScale = DwlService.getOutputScale(screen.name)
+            if (dwlScale !== undefined && dwlScale > 0) return dwlScale
+        }
+
+        return screen?.devicePixelRatio || 1
+    }
 
     Timer {
         id: refreshTimer
@@ -53,6 +80,19 @@ Singleton {
     function scheduleRefresh() {
         if (!isHyprland) return
         if (_refreshScheduled) return
+
+        const now = Date.now()
+        if (now - _refreshWindowStart > 1000) {
+            _refreshCount = 0
+            _refreshWindowStart = now
+        }
+
+        if (_refreshCount >= _maxRefreshesPerSecond) {
+            console.warn("CompositorService: Refresh rate limit exceeded, skipping refresh")
+            return
+        }
+
+        _refreshCount++
         _refreshScheduled = true
         refreshTimer.restart()
     }
@@ -85,6 +125,15 @@ Singleton {
         detectCompositor()
         scheduleSort()
         Qt.callLater(() => NiriService.generateNiriLayoutConfig())
+    }
+
+    Connections {
+        target: DwlService
+        function onStateChanged() {
+            if (isDwl && !isHyprland && !isNiri) {
+                scheduleSort()
+            }
+        }
     }
 
     function computeSortedToplevels() {
@@ -123,6 +172,18 @@ Singleton {
                 for (let k of path) { if (v == null) return fb; v = v[k] }
                 return (v == null) ? fb : v
             } catch(e) { return fb }
+        }
+
+        let currentAddresses = new Set()
+        for (let i = 0; i < items.length; i++) {
+            const addr = items[i]?.address
+            if (addr) currentAddresses.add(addr)
+        }
+
+        for (let cachedAddr in _coordCache) {
+            if (!currentAddresses.has(cachedAddr)) {
+                delete _coordCache[cachedAddr]
+            }
         }
 
         let snap = []
@@ -331,6 +392,8 @@ Singleton {
         if (hyprlandSignature && hyprlandSignature.length > 0) {
             isHyprland = true
             isNiri = false
+            isDwl = false
+            isSway = false
             compositor = "hyprland"
             console.info("CompositorService: Detected Hyprland")
             try {
@@ -344,33 +407,103 @@ Singleton {
                 if (exitCode === 0) {
                     isNiri = true
                     isHyprland = false
+                    isDwl = false
+                    isSway = false
                     compositor = "niri"
                     console.info("CompositorService: Detected Niri with socket:", niriSocket)
                     NiriService.generateNiriBinds()
-                } else {
-                    isHyprland = false
-                    isNiri = true
-                    compositor = "niri"
-                    console.warn("CompositorService: Niri socket check failed, defaulting to Niri anyway")
+                    NiriService.generateNiriBlurrule()
                 }
             }, 0)
+            return
+        }
+
+        if (swaySocket && swaySocket.length > 0) {
+            Proc.runCommand("swaySocketCheck", ["test", "-S", swaySocket], (output, exitCode) => {
+                if (exitCode === 0) {
+                    isNiri = false
+                    isHyprland = false
+                    isDwl = false
+                    isSway = true
+                    compositor = "sway"
+                    console.info("CompositorService: Detected Sway with socket:", swaySocket)
+                }
+            }, 0)
+            return            
+        }
+        
+        if (DMSService.dmsAvailable) {
+            Qt.callLater(checkForDwl)
         } else {
             isHyprland = false
             isNiri = false
+            isDwl = false
+            isSway = false
             compositor = "unknown"
             console.warn("CompositorService: No compositor detected")
+        }
+    }
+
+    Connections {
+        target: DMSService
+        function onCapabilitiesReceived() {
+            if (!isHyprland && !isNiri && !isDwl) {
+                checkForDwl()
+            }
+        }
+    }
+
+    function checkForDwl() {
+        if (DMSService.apiVersion >= 12 && DMSService.capabilities.includes("dwl")) {
+            isHyprland = false
+            isNiri = false
+            isDwl = true
+            compositor = "dwl"
+            console.info("CompositorService: Detected DWL via DMS capability")
         }
     }
 
     function powerOffMonitors() {
         if (isNiri) return NiriService.powerOffMonitors()
         if (isHyprland) return Hyprland.dispatch("dpms off")
+        if (isDwl) return _dwlPowerOffMonitors()
+        if (isSway) { try { I3.dispatch("output * dpms off") } catch(_){} return }
         console.warn("CompositorService: Cannot power off monitors, unknown compositor")
     }
 
     function powerOnMonitors() {
         if (isNiri) return NiriService.powerOnMonitors()
         if (isHyprland) return Hyprland.dispatch("dpms on")
+        if (isDwl) return _dwlPowerOnMonitors()
+        if (isSway) { try { I3.dispatch("output * dpms on") } catch(_){} return }
         console.warn("CompositorService: Cannot power on monitors, unknown compositor")
+    }
+
+    function _dwlPowerOffMonitors() {
+        if (!Quickshell.screens || Quickshell.screens.length === 0) {
+            console.warn("CompositorService: No screens available for DWL power off")
+            return
+        }
+
+        for (let i = 0; i < Quickshell.screens.length; i++) {
+            const screen = Quickshell.screens[i]
+            if (screen && screen.name) {
+                Quickshell.execDetached(["mmsg", "-d", "disable_monitor," + screen.name])
+            }
+        }
+    }
+
+    function _dwlPowerOnMonitors() {
+        if (!Quickshell.screens || Quickshell.screens.length === 0) {
+            console.warn("CompositorService: No screens available for DWL power on")
+            return
+        }
+
+        for (let i = 0; i < Quickshell.screens.length; i++) {
+            const screen = Quickshell.screens[i]
+            if (screen && screen.name) {
+                Quickshell.execDetached(["mmsg", "-d", "enable_monitor," + screen.name])
+            }
+        }
     }
 }

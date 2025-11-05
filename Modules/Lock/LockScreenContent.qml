@@ -62,6 +62,7 @@ Item {
 
     function sendLockerReadyOnce() {
         if (lockerReadySent) return;
+        if (root.unlocking) return;
         lockerReadySent = true;
         if (SessionService.loginctlAvailable && DMSService.apiVersion >= 2) {
             DMSService.sendRequest("loginctl.lockerReady", null, resp => {
@@ -73,9 +74,10 @@ Item {
 
     function maybeSend() {
         if (!lockerReadyArmed) return;
+        if (root.unlocking) return;
         if (!root.visible || root.opacity <= 0) return;
         Qt.callLater(() => {
-            if (root.visible && root.opacity > 0)
+            if (root.visible && root.opacity > 0 && !root.unlocking)
                 sendLockerReadyOnce();
         });
     }
@@ -157,12 +159,6 @@ Item {
         anchors.fill: parent
         source: {
             var currentWallpaper = SessionData.getMonitorWallpaper(screenName)
-            if (screenName && currentWallpaper && currentWallpaper.startsWith("we:")) {
-                const cacheHome = StandardPaths.writableLocation(StandardPaths.GenericCacheLocation).toString()
-                const baseDir = Paths.strip(cacheHome)
-                const screenshotPath = baseDir + "/DankMaterialShell/we_screenshots" + "/" + currentWallpaper.substring(3) + ".jpg"
-                return screenshotPath
-            }
             return (currentWallpaper && !currentWallpaper.startsWith("#")) ? currentWallpaper : ""
         }
         fillMode: Theme.getFillMode(SettingsData.wallpaperFillMode)
@@ -551,12 +547,14 @@ Item {
                             if (parent.showPassword) {
                                 return root.passwordBuffer
                             }
-                            return "•".repeat(Math.min(root.passwordBuffer.length, 25))
+                            return "•".repeat(root.passwordBuffer.length)
                         }
                         color: Theme.surfaceText
                         font.pixelSize: parent.showPassword ? Theme.fontSizeMedium : Theme.fontSizeLarge
                         opacity: (demoMode || root.passwordBuffer.length > 0) ? 1 : 0
-                        elide: Text.ElideRight
+                        clip: true
+                        elide: Text.ElideNone
+                        horizontalAlignment: implicitWidth > width ? Text.AlignRight : Text.AlignLeft
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -1245,6 +1243,7 @@ Item {
         lockSecured: !demoMode
         onUnlockRequested: {
             root.unlocking = true
+            lockerReadyArmed = false
             passwordField.text = ""
             root.passwordBuffer = ""
             root.unlockRequested()

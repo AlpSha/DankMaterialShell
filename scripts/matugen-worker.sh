@@ -41,6 +41,16 @@ LOCK="$STATE_DIR/matugen-worker.lock"
 exec 9>"$LOCK"
 flock 9
 
+rm -f "$BUILT_KEY"
+
+get_matugen_major_version() {
+  local version_output=$(matugen --version 2>&1)
+  local version=$(echo "$version_output" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+  local major=$(echo "$version" | cut -d. -f1)
+  echo "$major"
+}
+
+MATUGEN_VERSION=$(get_matugen_major_version)
 
 read_desired() {
   [[ ! -f "$DESIRED_JSON" ]] && { echo "no desired state" >&2; exit 0; }
@@ -178,8 +188,8 @@ EOF
     trap 'rm -rf "$TMP_TEMPLATES_DIR"' RETURN
 
     # Create shifted versions of templates
-    for template in "$SHELL_DIR/matugen/templates"/*.{css,conf,json,kdl,colors} \
-                    "$USER_MATUGEN_DIR/templates"/*.{css,conf,json,kdl,colors,toml}; do
+    for template in "$SHELL_DIR/matugen/templates"/*.{css,conf,json,kdl,colors,ini,toml} \
+                    "$USER_MATUGEN_DIR/templates"/*.{css,conf,json,kdl,colors,toml,ini}; do
       [[ -f "$template" ]] || continue
       template_name="$(basename "$template")"
       shifted_template="$TMP_TEMPLATES_DIR/$template_name"
@@ -239,12 +249,36 @@ EOF
     echo "" >> "$TMP_CONTENT_CFG"
   fi
 
+  if command -v foot >/dev/null 2>&1; then
+    cat "$SHELL_DIR/matugen/configs/foot.toml" >> "$TMP_CONTENT_CFG"
+    sed -i "s|input_path = './matugen/templates/|input_path = '${CONTENT_TEMPLATES_PATH}|g" "$TMP_CONTENT_CFG"
+    echo "" >> "$TMP_CONTENT_CFG"
+  fi
+
+  if command -v alacritty >/dev/null 2>&1; then
+    cat "$SHELL_DIR/matugen/configs/alacritty.toml" >> "$TMP_CONTENT_CFG"
+    sed -i "s|input_path = './matugen/templates/|input_path = '${CONTENT_TEMPLATES_PATH}|g" "$TMP_CONTENT_CFG"
+    echo "" >> "$TMP_CONTENT_CFG"
+  fi
+
   if command -v dgop >/dev/null 2>&1; then
     cat "$SHELL_DIR/matugen/configs/dgop.toml" >> "$TMP_CONTENT_CFG"
     sed -i "s|input_path = './matugen/templates/|input_path = '${CONTENT_TEMPLATES_PATH}|g" "$TMP_CONTENT_CFG"
     echo "" >> "$TMP_CONTENT_CFG"
   fi
-  
+
+  if command -v code >/dev/null 2>&1; then
+    cat "$SHELL_DIR/matugen/configs/vscode.toml" >> "$TMP_CONTENT_CFG"
+    sed -i "s|input_path = './matugen/templates/|input_path = '${CONTENT_TEMPLATES_PATH}|g" "$TMP_CONTENT_CFG"
+    echo "" >> "$TMP_CONTENT_CFG"
+  fi
+
+  if command -v codium >/dev/null 2>&1; then
+    cat "$SHELL_DIR/matugen/configs/codium.toml" >> "$TMP_CONTENT_CFG"
+    sed -i "s|input_path = './matugen/templates/|input_path = '${CONTENT_TEMPLATES_PATH}|g" "$TMP_CONTENT_CFG"
+    echo "" >> "$TMP_CONTENT_CFG"
+  fi
+
   if [[ -s "$TMP_CONTENT_CFG" ]] && grep -q '\[templates\.' "$TMP_CONTENT_CFG"; then
     case "$kind" in
       image)
@@ -255,7 +289,7 @@ EOF
         ;;
     esac
   fi
-  
+
   rm -f "$TMP_CONTENT_CFG"
   popd >/dev/null
 
@@ -279,22 +313,28 @@ EOF
     gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3-${mode}" >/dev/null 2>&1 || true
   fi
 
-  if [ "$mode" = "light" ]; then
-    SECTION=$(echo "$JSON" | sed -n 's/.*"light":{\([^}]*\)}.*/\1/p')
+  if [[ "$MATUGEN_VERSION" == "2" ]]; then
+    PRIMARY=$(echo "$JSON" | sed -n "s/.*\"$mode\":{[^}]*\"primary\":\"\\(#[0-9a-fA-F]\\{6\\}\\)\".*/\\1/p")
+    SURFACE=$(echo "$JSON" | sed -n "s/.*\"$mode\":{[^}]*\"surface\":\"\\(#[0-9a-fA-F]\\{6\\}\\)\".*/\\1/p")
   else
-    SECTION=$(echo "$JSON" | sed -n 's/.*"dark":{\([^}]*\)}.*/\1/p')
+    JSON_FLAT=$(echo "$JSON" | tr -d '\n')
+    PRIMARY=$(echo "$JSON_FLAT" | sed -n "s/.*\"primary\" *: *{ *[^}]*\"$mode\" *: *\"\\(#[0-9a-fA-F]\\{6\\}\\)\".*/\\1/p")
+    SURFACE=$(echo "$JSON_FLAT" | sed -n "s/.*\"surface\" *: *{ *[^}]*\"$mode\" *: *\"\\(#[0-9a-fA-F]\\{6\\}\\)\".*/\\1/p")
   fi
 
-  PRIMARY=$(echo "$SECTION" | sed -n 's/.*"primary_container":"\(#[0-9a-fA-F]\{6\}\)".*/\1/p')
-  HONOR=$(echo "$SECTION"  | sed -n 's/.*"primary":"\(#[0-9a-fA-F]\{6\}\)".*/\1/p')
-  SURFACE=$(echo "$SECTION" | sed -n 's/.*"surface":"\(#[0-9a-fA-F]\{6\}\)".*/\1/p')
+  if [[ -z "$PRIMARY" ]]; then
+    echo "Error: Failed to extract PRIMARY color from matugen JSON (mode: $mode)" >&2
+    echo "This may indicate an incompatible matugen JSON format" >&2
+    set_system_color_scheme "$mode"
+    return 2
+  fi
 
   if command -v ghostty >/dev/null 2>&1 && [[ -f "$CONFIG_DIR/ghostty/config-dankcolors" ]]; then
-    OUT=$("$SHELL_DIR/matugen/dank16.py" "$PRIMARY" $([[ "$mode" == "light" ]] && echo --light) ${HONOR:+--honor-primary "$HONOR"} ${SURFACE:+--background "$SURFACE"} 2>/dev/null || true)
+    OUT=$(dms dank16 "$PRIMARY" $([[ "$mode" == "light" ]] && echo --light) ${SURFACE:+--background "$SURFACE"} --ghostty 2>/dev/null || true)
     if [[ -n "${OUT:-}" ]]; then
       TMP="$(mktemp)"
-      printf "%s\n\n" "$OUT" > "$TMP"
-      cat "$CONFIG_DIR/ghostty/config-dankcolors" >> "$TMP"
+      sed '/^palette = /d' "$CONFIG_DIR/ghostty/config-dankcolors" > "$TMP"
+      printf "\n%s\n" "$OUT" >> "$TMP"
       mv "$TMP" "$CONFIG_DIR/ghostty/config-dankcolors"
       if [[ -f "$CONFIG_DIR/ghostty/config" ]] && grep -q "^[^#]*config-dankcolors" "$CONFIG_DIR/ghostty/config" 2>/dev/null; then
         pkill -USR2 -x 'ghostty|.ghostty-wrappe' >/dev/null 2>&1 || true
@@ -303,12 +343,15 @@ EOF
   fi
 
   if command -v kitty >/dev/null 2>&1 && [[ -f "$CONFIG_DIR/kitty/dank-theme.conf" ]]; then
-    OUT=$("$SHELL_DIR/matugen/dank16.py" "$PRIMARY" $([[ "$mode" == "light" ]] && echo --light) ${HONOR:+--honor-primary "$HONOR"} ${SURFACE:+--background "$SURFACE"} --kitty 2>/dev/null || true)
+    OUT=$(dms dank16 "$PRIMARY" $([[ "$mode" == "light" ]] && echo --light) ${SURFACE:+--background "$SURFACE"} --kitty 2>/dev/null || true)
     if [[ -n "${OUT:-}" ]]; then
       TMP="$(mktemp)"
-      printf "%s\n\n" "$OUT" > "$TMP"
-      cat "$CONFIG_DIR/kitty/dank-theme.conf" >> "$TMP"
+      sed '/^color[0-9]/d' "$CONFIG_DIR/kitty/dank-theme.conf" > "$TMP"
+      printf "\n%s\n" "$OUT" >> "$TMP"
       mv "$TMP" "$CONFIG_DIR/kitty/dank-theme.conf"
+      if [[ -f "$CONFIG_DIR/kitty/kitty.conf" ]] && grep -q "^[^#]*dank-theme.conf" "$CONFIG_DIR/kitty/kitty.conf" 2>/dev/null; then
+        pkill -USR1 -x kitty >/dev/null 2>&1 || true
+      fi
     fi
   fi
 
@@ -343,10 +386,6 @@ EOF
 
   set_system_color_scheme "$mode"
 }
-
-if command -v pywalfox >/dev/null 2>&1 && [[ -f "$HOME/.cache/wal/colors.json" ]]; then
-  pywalfox update >/dev/null 2>&1 || true
-fi
 
 while :; do
   DESIRED="$(read_desired)"

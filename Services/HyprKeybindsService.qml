@@ -10,8 +10,6 @@ import qs.Common
 Singleton {
     id: root
 
-    readonly property string shellDir: Paths.strip(Qt.resolvedUrl(".").toString()).replace("/Services/", "")
-    property string scriptPath: `${shellDir}/scripts/hyprland_keybinds.py`
     readonly property string _configUrl: StandardPaths.writableLocation(StandardPaths.ConfigLocation)
     readonly property string _configDir: Paths.strip(_configUrl)
     property string hyprConfigPath: `${_configDir}/hypr`
@@ -19,8 +17,8 @@ Singleton {
 
     Process {
         id: getKeybinds
-        running: true
-        command: [root.scriptPath, "--path", root.hyprConfigPath]
+        running: false
+        command: ["dms", "hyprland", "keybinds", "--path", root.hyprConfigPath]
 
         stdout: SplitParser {
             onRead: data => {
@@ -31,9 +29,22 @@ Singleton {
                 }
             }
         }
+
+        onExited: (code) => {
+            if (code !== 0) {
+                console.warn("[HyprKeybindsService] Process exited with code:", code)
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        getKeybinds.running = true
     }
 
     function reload() {
-        getKeybinds.running = true
+        getKeybinds.running = false
+        Qt.callLater(function() {
+            getKeybinds.running = true
+        })
     }
 }

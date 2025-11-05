@@ -137,6 +137,15 @@
   "Audio Output Devices (": {
     "Audio Output Devices (": "音频输出设备 ("
   },
+  "Authenticate": {
+    "Authenticate": "认证"
+  },
+  "Authentication Required": {
+    "Authentication Required": "需要认证"
+  },
+  "Authentication failed, please try again": {
+    "Authentication failed, please try again": "认证失败，请重试"
+  },
   "Authorize": {
     "Authorize": "授权"
   },
@@ -163,6 +172,12 @@
   },
   "Auto-saving...": {
     "Auto-saving...": "自动保存中..."
+  },
+  "Autoconnect disabled": {
+    "Autoconnect disabled": "已禁用自动连接"
+  },
+  "Autoconnect enabled": {
+    "Autoconnect enabled": "已启用自动连接"
   },
   "Automatic Control": {
     "Automatic Control": "自动切换"
@@ -338,6 +353,9 @@
   "Color Picker": {
     "Color Picker": "取色器"
   },
+  "Color temperature for day time": {
+    "Color temperature for day time": "白天的色温"
+  },
   "Color temperature for night mode": {
     "Color temperature for night mode": "夜间模式色温"
   },
@@ -367,6 +385,9 @@
   },
   "Compact Mode": {
     "Compact Mode": "紧凑模式"
+  },
+  "Compositor": {
+    "Compositor": "合成器"
   },
   "Compositor:": {
     "Compositor:": "合成器："
@@ -409,6 +430,15 @@
   },
   "Control currently playing media": {
     "Control currently playing media": "控制当前播放的媒体"
+  },
+  "Controls opacity of all popouts, modals, and their content layers (DankDash, Settings, App Drawer, Control Center, etc.)": {
+    "Controls opacity of all popouts, modals, and their content layers (DankDash, Settings, App Drawer, Control Center, etc.)": "控制所有弹出窗口、模态及其内容层（DankDash、设置、应用抽屉、控制中心等）的不透明度"
+  },
+  "Controls opacity of individual widgets inside DankBar": {
+    "Controls opacity of individual widgets inside DankBar": "控制 DankBar 中各个控件的不透明度"
+  },
+  "Controls opacity of the DankBar panel background": {
+    "Controls opacity of the DankBar panel background": "控制 DankBar 面板背景的不透明度"
   },
   "Copied to clipboard": {
     "Copied to clipboard": "复制到剪切板"
@@ -479,6 +509,9 @@
   "Daily at:": {
     "Daily at:": "在每日："
   },
+  "Dank": {
+    "Dank": "Dank"
+  },
   "Dank Bar": {
     "Dank Bar": "Dank Bar"
   },
@@ -494,8 +527,20 @@
   "DankBar Font Scale": {
     "DankBar Font Scale": "Dank Bar 字体缩放"
   },
+  "DankSearch not available": {
+    "DankSearch not available": "DankSearch 不可用"
+  },
+  "Dark Mode": {
+    "Dark Mode": "暗色模式"
+  },
+  "Darken Modal Background": {
+    "Darken Modal Background": "暗化背景"
+  },
   "Date Format": {
     "Date Format": "日期格式"
+  },
+  "Day Temperature": {
+    "Day Temperature": "日间温度"
   },
   "Default": {
     "Default": "默认"
@@ -520,6 +565,9 @@
   },
   "Device paired": {
     "Device paired": "设备已配对"
+  },
+  "Disable Autoconnect": {
+    "Disable Autoconnect": "禁用自动连接"
   },
   "Disconnect": {
     "Disconnect": "断开连接"
@@ -596,6 +644,9 @@
   "Empty": {
     "Empty": "空"
   },
+  "Enable Autoconnect": {
+    "Enable Autoconnect": "启用自动连接"
+  },
   "Enable GPU Temperature": {
     "Enable GPU Temperature": "显示 GPU 温度"
   },
@@ -628,6 +679,9 @@
   },
   "Enter PIN for ": {
     "Enter PIN for ": "输入PIN "
+  },
+  "Enter a search query": {
+    "Enter a search query": "输入检索内容"
   },
   "Enter credentials for ": {
     "Enter credentials for ": "输入凭据 "
@@ -688,6 +742,9 @@
   },
   "Failed to start connection to ": {
     "Failed to start connection to ": "无法启动连接至 "
+  },
+  "Failed to update autoconnect": {
+    "Failed to update autoconnect": "无法更新自动连接"
   },
   "Feels Like": {
     "Feels Like": "体感温度"
@@ -968,6 +1025,9 @@
   "Matugen Settings": {
     "Matugen Settings": "Matugen 设置"
   },
+  "Matugen Target Monitor": {
+    "Matugen Target Monitor": "Matugen目标监视器"
+  },
   "Max apps to show": {
     "Max apps to show": "应用显示上限"
   },
@@ -1006,6 +1066,9 @@
   },
   "Monitor Selection:": {
     "Monitor Selection:": "选择显示器："
+  },
+  "Monitor whose wallpaper drives dynamic theming colors": {
+    "Monitor whose wallpaper drives dynamic theming colors": "监视使用动态主题色的壁纸"
   },
   "Monospace Font": {
     "Monospace Font": "等宽字体"
@@ -1058,6 +1121,9 @@
   "Night Mode": {
     "Night Mode": "夜间模式"
   },
+  "Night Temperature": {
+    "Night Temperature": "夜间温度"
+  },
   "No Active Players": {
     "No Active Players": "没有正在播放的音频"
   },
@@ -1078,6 +1144,9 @@
   },
   "No clipboard entries found": {
     "No clipboard entries found": "无可用记录"
+  },
+  "No files found": {
+    "No files found": "未找到文件"
   },
   "No items added yet": {
     "No items added yet": "暂未添加任何项目"
@@ -1367,6 +1436,12 @@
   "Scroll through windows, rather than workspaces": {
     "Scroll through windows, rather than workspaces": "滚动窗口，而非工作区"
   },
+  "Search file contents": {
+    "Search file contents": "检索文件内容"
+  },
+  "Search filenames": {
+    "Search filenames": "检索文件名"
+  },
   "Search for a location...": {
     "Search for a location...": "搜索位置..."
   },
@@ -1375,6 +1450,9 @@
   },
   "Search...": {
     "Search...": "搜索中..."
+  },
+  "Searching...": {
+    "Searching...": "检索中..."
   },
   "Select Launcher Logo": {
     "Select Launcher Logo": "选择启动器Logo"
@@ -1430,6 +1508,9 @@
   "Shift+Del: Clear All • Esc: Close": {
     "Shift+Del: Clear All • Esc: Close": "Shift+Del: 清空 • Esc: 关闭"
   },
+  "Show All Tags": {
+    "Show All Tags": "显示所有标签"
+  },
   "Show Confirmation on Power Actions": {
     "Show Confirmation on Power Actions": "显示电源操作确认弹窗"
   },
@@ -1444,6 +1525,12 @@
   },
   "Show Workspace Apps": {
     "Show Workspace Apps": "显示工作区内应用"
+  },
+  "Show all 9 tags instead of only occupied tags (DWL only)": {
+    "Show all 9 tags instead of only occupied tags (DWL only)": "显示所有 9 个标签，而非仅占用的标签（仅限 DWL）"
+  },
+  "Show darkened overlay behind modal dialogs": {
+    "Show darkened overlay behind modal dialogs": "在对话框后显示暗色遮罩"
   },
   "Show on Last Display": {
     "Show on Last Display": "上一个显示器"
@@ -1528,6 +1615,9 @@
   },
   "Suspend": {
     "Suspend": "挂起"
+  },
+  "Suspend behavior": {
+    "Suspend behavior": ""
   },
   "Suspend system after": {
     "Suspend system after": "在此时间后挂起系统"
@@ -1768,6 +1858,9 @@
   },
   "Wallpaper": {
     "Wallpaper": "壁纸"
+  },
+  "Wallpaper Monitor": {
+    "Wallpaper Monitor": "壁纸监视器"
   },
   "Wallpapers": {
     "Wallpapers": "壁纸"

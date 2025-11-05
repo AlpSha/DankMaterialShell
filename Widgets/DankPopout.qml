@@ -8,7 +8,8 @@ import qs.Services
 PanelWindow {
     id: root
 
-    WlrLayershell.namespace: "quickshell:popout"
+    property string blurNamespace: "dms:popout"
+    WlrLayershell.namespace: blurNamespace
 
     property alias content: contentLoader.sourceComponent
     property alias contentLoader: contentLoader
@@ -52,7 +53,7 @@ PanelWindow {
 
     Timer {
         id: closeTimer
-        interval: animationDuration + 120
+        interval: animationDuration
         onTriggered: {
             if (!shouldBeVisible) {
                 visible = false
@@ -75,17 +76,7 @@ PanelWindow {
 
     readonly property real screenWidth: root.screen.width
     readonly property real screenHeight: root.screen.height
-    readonly property real dpr: {
-        if (CompositorService.isNiri && root.screen) {
-            const niriScale = NiriService.displayScales[root.screen.name]
-            if (niriScale !== undefined) return niriScale
-        }
-        if (CompositorService.isHyprland && root.screen) {
-            const hyprlandMonitor = Hyprland.monitors.values.find(m => m.name === root.screen.name)
-            if (hyprlandMonitor?.scale !== undefined) return hyprlandMonitor.scale
-        }
-        return root.screen?.devicePixelRatio || 1
-    }
+    readonly property real dpr: CompositorService.getScreenScale(root.screen)
 
     readonly property real alignedWidth: Theme.px(popupWidth, dpr)
     readonly property real alignedHeight: Theme.px(popupHeight, dpr)
@@ -112,7 +103,8 @@ PanelWindow {
 
     MouseArea {
         anchors.fill: parent
-        enabled: shouldBeVisible
+        enabled: shouldBeVisible && contentLoader.opacity > 0.1
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: mouse => {
             if (mouse.x < alignedX || mouse.x > alignedX + alignedWidth ||
                 mouse.y < alignedY || mouse.y > alignedY + alignedHeight) {
@@ -131,9 +123,12 @@ PanelWindow {
         active: root.visible
         asynchronous: false
         transformOrigin: Item.Center
-        layer.enabled: Quickshell.env("DMS_DISABLE_LAYER") !== "true"
+        layer.enabled: Quickshell.env("DMS_DISABLE_LAYER") !== "true" && Quickshell.env("DMS_DISABLE_LAYER") !== "1"
         layer.smooth: true
+        layer.textureSize: Qt.size(width * Math.max(2, root.screen?.devicePixelRatio || 1), height * Math.max(2, root.screen?.devicePixelRatio || 1))
+        layer.samples: 4
         opacity: shouldBeVisible ? 1 : 0
+        visible: opacity > 0
         transform: [scaleTransform, motionTransform]
 
         Scale {
